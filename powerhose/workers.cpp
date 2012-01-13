@@ -57,13 +57,22 @@ int main(int argc, const char* const argv[])
 
     // getting the receiver jobs
     for (short j = 0; j < items[0].revents; j++) {
+        cout << "received some work to do" << endl;
+
         message_t job;
         receiver.recv(&job);
+
+        // XXX this does not work
+        // converting to a C string
+        char sjob[job.size()];
+        memcpy(sjob, job.data(), job.size());
+
         // do something with the message
+        cout << sjob << endl;
 
         // send back the result
-        message_t res;
-        memset(res.data(), 0, res.size());
+        message_t res(5);
+        memcpy((void *) res.data (), "World", 5);
         sender.send(res);
 
     }

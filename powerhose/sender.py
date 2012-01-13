@@ -71,7 +71,7 @@ class Sender(object):
         # create a job ID
         job_id = _jobnum()
         job['id'] = job_id
-        self.ventilator_send.send_pyobj(job)
+        self.ventilator_send.send_json(job)
         while job_id not in self.results:
             time.sleep(.1)
 

@@ -45,7 +45,7 @@ class Worker(object):
             # If the message came from work_receiver channel, square the number
             # and send the answer to the results reporter
             if socks.get(self.work_receiver) == zmq.POLLIN:
-                work_message = self.work_receiver.recv_pyobj()
+                work_message = self.work_receiver.recv_json()
                 func_id = work_message['func']
                 func = self.funcs[func_id]
                 del work_message['func']
@@ -55,7 +55,7 @@ class Worker(object):
                     'result': func(**work_message),
                     'id': work_message['id']}
 
-                self.results_sender.send_pyobj(data)
+                self.results_sender.send_json(data)
 
             # If the message came over the control channel,
             # shut down the worker.

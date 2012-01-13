@@ -11,7 +11,7 @@ if __name__ == "__main__":
     funcs = {'square': square}
 
     # Create a pool of workers to distribute work to
-    create_pool(10, funcs)
+    #create_pool(10, funcs)
 
     # Start the ventilator!
     ventilator = Sender()
