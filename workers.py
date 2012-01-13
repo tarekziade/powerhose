@@ -28,7 +28,7 @@ class Receiver(threading.Thread):
         self.running = True
         print 'Waiting for results'
         while self.running:
-            res = self.receiver.recv_json()
+            res = self.receiver.recv_pyobj()
             print 'received ' + str(res)
             self.rcpt[res['id']] = res
             time.sleep(0.2)
@@ -77,7 +77,7 @@ class Sender(object):
         # create a job ID
         job_id = _jobnum()
         job['id'] = job_id
-        self.ventilator_send.send_json(job)
+        self.ventilator_send.send_pyobj(job)
         while job_id not in self.results:
             time.sleep(.1)
 
@@ -116,12 +116,12 @@ def worker(wrk_num, func):
         # If the message came from work_receiver channel, square the number
         # and send the answer to the results reporter
         if socks.get(work_receiver) == zmq.POLLIN:
-            work_message = work_receiver.recv_json()
-            results_sender.send_json({
+            work_message = work_receiver.recv_pyobj()
+            data = {
                 'worker': wrk_num,
                 'result': func(**work_message),
                 'id': work_message['id']}
-            )
+            results_sender.send_pyobj(data)
 
         # If the message came over the control channel, shut down the worker.
         if socks.get(control_receiver) == zmq.POLLIN:
