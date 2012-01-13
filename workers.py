@@ -5,6 +5,7 @@ import threading
 
 _NUM = 0
 
+
 def _jobnum():
     global _NUM
     _NUM += 1
@@ -40,7 +41,7 @@ CTR = 'ipc:///tmp/controller'
 class Sender(object):
     """ Use this class to send jobs.
     """
-    def __init__(self):
+    def __init__(self, func, pool=10):
         # Initialize a zeromq context
         self.context = zmq.Context()
         # Set up a channel to send work
@@ -52,14 +53,16 @@ class Sender(object):
         self.results = {}
         self.receiver = Receiver(self.results_receiver, self.results)
         self.receiver.start()
+        # store the reference of the function we want to use for our jobs
+        self.func = func
 
         # Set up a channel to send control commands
         self.control_sender = self.context.socket(zmq.PUB)
         self.control_sender.bind(CTR)
         # Create a pool of workers to distribute work to
-        worker_pool = range(10)
+        worker_pool = range(pool)
         for wrk_num in range(len(worker_pool)):
-            Process(target=worker, args=(wrk_num,)).start()
+            Process(target=worker, args=(wrk_num, self.func)).start()
 
     def stop(self):
         self.control('FINISH')
@@ -83,7 +86,7 @@ class Sender(object):
         return res
 
 
-def worker(wrk_num):
+def worker(wrk_num, func):
     # Initialize a zeromq context
     context = zmq.Context()
 
@@ -114,11 +117,11 @@ def worker(wrk_num):
         # and send the answer to the results reporter
         if socks.get(work_receiver) == zmq.POLLIN:
             work_message = work_receiver.recv_json()
-            product = work_message['num'] * work_message['num']
-            answer_message = {'worker' : wrk_num, 'result' : product,
-                              'id': work_message['id']}
-            print 'job done'
-            results_sender.send_json(answer_message)
+            results_sender.send_json({
+                'worker': wrk_num,
+                'result': func(**work_message),
+                'id': work_message['id']}
+            )
 
         # If the message came over the control channel, shut down the worker.
         if socks.get(control_receiver) == zmq.POLLIN:
@@ -129,12 +132,15 @@ def worker(wrk_num):
 
 if __name__ == "__main__":
 
+    def square(num, **kwargs):
+        print 'job done'
+        return num * num
 
     # Start the ventilator!
-    ventilator = Sender()
+    ventilator = Sender(square, pool=10)
 
     # sending a job
-    job = {'num': 4}
-    print ventilator.execute(job)
+    for i in xrange(1, 10, 4):
+        ventilator.execute({'num': i})
 
     ventilator.stop()
