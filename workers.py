@@ -31,7 +31,6 @@ class Receiver(threading.Thread):
             res = self.receiver.recv_pyobj()
             print 'received ' + str(res)
             self.rcpt[res['id']] = res
-            time.sleep(0.2)
 
 WORK = 'ipc:///tmp/sender'
 RES = 'ipc:///tmp/receiver'
