@@ -4,6 +4,8 @@
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include "job.pb.h"
+
 
 using namespace zmq;
 using namespace std;
@@ -62,13 +64,17 @@ int main(int argc, const char* const argv[])
         message_t job;
         receiver.recv(&job);
 
-        // XXX this does not work
-        // converting to a C string
+        // XXX why do I have to convert to a string again ?
+        // can't I pass it directly to  protobuf ?
         char sjob[job.size()];
         memcpy(sjob, job.data(), job.size());
 
-        // do something with the message
-        cout << sjob << endl;
+        Job pjob;
+        pjob.ParseFromString(sjob);
+
+        cout << "Job Id " << pjob.id() << endl;
+        cout << "Job func " << pjob.func() << endl;
+        cout << "Job param " << pjob.param() << endl;
 
         // send back the result
         message_t res(5);

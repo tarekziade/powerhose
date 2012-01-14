@@ -2,7 +2,7 @@ import os
 from setuptools import setup, find_packages
 
 
-requires = ['pyzmq']
+requires = ['pyzmq', 'protobuf']
 
 
 setup(name='powerhose',

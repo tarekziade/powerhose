@@ -3,6 +3,9 @@ import zmq
 from  multiprocessing import Process
 import threading
 
+from powerhose.job_pb2 import Job
+
+
 _NUM = 0
 
 
@@ -65,13 +68,18 @@ class Sender(object):
     def control(self, msg):
         self.control_sender.send(msg)
 
-    def execute(self, job):
+    def execute(self, func, param):
         # XXX timeout ? , async ?
         #
         # create a job ID
         job_id = _jobnum()
-        job['id'] = job_id
-        self.ventilator_send.send_json(job)
+        job = Job()
+        job.id = job_id
+        job.func = func
+        job.param = param
+
+        self.ventilator_send.send(job.SerializeToString())
+
         while job_id not in self.results:
             time.sleep(.1)
 

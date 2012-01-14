@@ -18,6 +18,6 @@ if __name__ == "__main__":
 
     # sending a job
     for i in xrange(1, 10, 4):
-        ventilator.execute({'num': i, 'func': 'square'})
+        ventilator.execute('square', i)
 
     ventilator.stop()
