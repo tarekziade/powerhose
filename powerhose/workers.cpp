@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include "job.pb.h"
 #include <sys/wait.h>
+#include <map>
 
 
 using namespace zmq;
@@ -29,7 +30,10 @@ string msg2str(message_t* msg) {
 }
 
 
-void worker() {
+typedef std::map<string, string(*)(string)> Functions;
+
+
+void worker(Functions functions) {
   static const char* const WORK = "ipc:///tmp/sender" ;
   static const char* const RES = "ipc:///tmp/receiver" ;
   static const char* const CTR = "ipc:///tmp/controller" ;
@@ -70,26 +74,46 @@ void worker() {
 
         cout << "Received " << sjob.data() << endl;
 
-        // extracting the id and the job data
+        // extracting the id, the func name and the job data
         size_t pos = sjob.find(':');
         string job_data = sjob.substr(pos + 1, sjob.size() - pos);
         string job_id = sjob.substr(0, pos);
 
-        Job pjob;
-        pjob.ParseFromString(job_data);
+        pos = job_data.find(':');
+        string job_data2 = job_data.substr(pos + 1, job_data.size() - pos);
+        string job_func = job_data.substr(0, pos);
 
-        cout << "Job Id " << job_id << endl;
-        cout << "Job func " << pjob.func() << endl;
-        cout << "Job param " << pjob.param() << endl;
+        Functions::iterator iter = functions.begin();
+        iter = functions.find(job_func);
+
+        string (*function)(string) = NULL;
+
+        if (iter != functions.end())  {
+            cout << "Value is: " << iter->second << '\n';
+            function = iter->second;
+        }
+        else {
+            cout << "Key is not in my_map" << '\n';
+            function = NULL;
+        }
+
+        string res;
+        cout << "calling the func " << job_data2 << endl;
+
+        if (function) {
+            res = (*function)(job_data2);
+        }
+        else {
+            res = "NONE";
+        }
+        cout << "res is" << res << endl;
 
         // send back the result
-        //message_t res(jpb.sized());
-        //memcpy((void *) res.data (), sjob, job.size());
-        string sres = job_id + ":" + sjob.data();
-        message_t res(sres.size());
-        memcpy((void *)res.data(), sres.data(), sres.size());
+        string sres = job_id + ":" + res;
+        message_t mres(sres.size());
+        memcpy((void *)mres.data(), sres.data(), sres.size());
         cout << "sending " << sres << endl;
-        sender.send(res);
+        sender.send(mres);
     }
 
     // getting the controller jobs
@@ -102,6 +126,15 @@ void worker() {
 
 }
 
+string square(string job) {
+    Job pjob;
+    pjob.ParseFromString(job);
+    pjob.set_param(pjob.param() * pjob.param());
+    string res;
+    pjob.SerializeToString(&res);
+    return res;
+}
+
 
 int main(int argc, const char* const argv[]) {
   signal(SIGINT, bye);
@@ -110,13 +143,16 @@ int main(int argc, const char* const argv[]) {
   string sid;
   short i = 1;
 
+  map<string, string(*)(string)> functions;
+  functions.insert(pair<string, string (*)(string)>("square", &square));
+
   while (i < workers_count) {
     pid_t pid = fork();
     if (pid == 0) {
         sid = "child";
         pids[i] = pid;
         cout << "Starting worker " << getpid() << endl;
-        worker();
+        worker(functions);
         i = workers_count;
     }
     else {

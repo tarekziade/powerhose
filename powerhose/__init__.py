@@ -22,7 +22,7 @@ if __name__ == "__main__":
         job.func = 'square'
         job.param = i
         job.id = 1
-        ventilator.execute(job.SerializeToString())
+        ventilator.execute('square', job.SerializeToString())
 
     print 'stopping'
     ventilator.stop()

@@ -62,13 +62,13 @@ class Sender(object):
     def control(self, msg):
         self.control_sender.send(msg)
 
-    def execute(self, job):
+    def execute(self, func_name, data):
         # XXX timeout ? , async ?
         #
         # create a job ID
         short = binascii.b2a_hex(os.urandom(10))[:10]
         job_id = str(int(time.time())) + short
-        job = '%s:%s' % (job_id, job)
+        job = '%s:%s:%s' % (job_id, func_name, data)
         self.ventilator_send.send(job)
 
         print 'sent ' + job_id
