@@ -106,18 +106,28 @@ namespace powerhose
             }
 
             string res;
+            string status;
+
             cout << "calling the func " << job_data2 << endl;
 
             if (function) {
-                res = (*function)(job_data2);
+                try {
+                    res = (*function)(job_data2);
+                    status = "OK";
+                }
+                catch (...) {
+                    status = "KO";
+                    res = "details about the error?";
+                }
             }
             else {
                 res = "NONE";
             }
+
             cout << "res is" << res << endl;
 
             // send back the result
-            string sres = job_id + ":OK:" + res;
+            string sres = job_id + ":" + status + ":" + res;
             message_t mres(sres.size());
             memcpy((void *)mres.data(), sres.data(), sres.size());
             cout << "sending " << sres << endl;
