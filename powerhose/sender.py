@@ -31,9 +31,10 @@ class Receiver(threading.Thread):
         self.running = True
         print 'Waiting for results'
         while self.running:
-            res = self.receiver.recv_pyobj()
+            res = self.receiver.recv()
+            print 'need to unserialize'
             print 'received ' + str(res)
-            self.rcpt[res['id']] = res
+            #self.rcpt[res['id']] = res
 
 WORK = 'ipc:///tmp/sender'
 RES = 'ipc:///tmp/receiver'
