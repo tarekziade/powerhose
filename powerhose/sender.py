@@ -5,6 +5,7 @@ import zmq
 from  multiprocessing import Process
 import threading
 from collections import defaultdict
+from contextlib import contextmanager
 
 
 class TimeoutError(Exception):
@@ -32,7 +33,9 @@ class Receiver(threading.Thread):
 
         while self.running:
             res = self.receiver.recv()
+
             job_id, data = res.split(':', 1)
+
             for callback in self._callbacks[job_id]:
                 callback(job_id, data)
 
@@ -42,6 +45,15 @@ class Receiver(threading.Thread):
 WORK = 'ipc:///tmp/sender'
 RES = 'ipc:///tmp/receiver'
 CTR = 'ipc:///tmp/controller'
+
+
+@contextmanager
+def PowerHose():
+    sender = Sender()
+    try:
+        yield sender
+    finally:
+        sender.stop()
 
 
 class Sender(object):
@@ -65,6 +77,9 @@ class Sender(object):
 
     def stop(self):
         self.control('FINISH')
+        self.control_sender.close()
+        self.results_receiver.close()
+        self.ventilator_send.close()
         self.receiver.stop()
 
     def control(self, msg):

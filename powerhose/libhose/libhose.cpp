@@ -15,9 +15,15 @@ using namespace std;
 namespace powerhose
 {
 
+  socket_t* sockets[3];
+
   void bye(int param) {
     cout << "Bye from " << getpid() << endl;
-    // cleanup ?
+
+    // cleanup
+    for (int i=0; i<3; i++) {
+        sockets[i]->close();
+    }
     exit(1);
   }
 
@@ -42,14 +48,17 @@ namespace powerhose
     // channel to receive work
     socket_t receiver(ctx, ZMQ_PULL);
     receiver.connect(WORK);
+    sockets[0] = &receiver;
 
     // channel to send back results
     socket_t sender(ctx, ZMQ_PUSH) ;
     sender.connect(RES);
+    sockets[1] = &sender;
 
     // channel for the controller
     socket_t control(ctx, ZMQ_SUB) ;
     control.connect(CTR);
+    sockets[2] = &control;
 
     // Set up a poller to multiplex the work receiver and
     // control receiver channels
