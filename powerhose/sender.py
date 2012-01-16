@@ -5,7 +5,6 @@ import zmq
 from  multiprocessing import Process
 import threading
 from collections import defaultdict
-from contextlib import contextmanager
 
 
 class TimeoutError(Exception):
@@ -15,13 +14,15 @@ class TimeoutError(Exception):
 class Receiver(threading.Thread):
     """Receive results asynchronously
     """
-    def __init__(self, receiver):
+    def __init__(self, context):
         threading.Thread.__init__(self)
-        self.receiver = receiver
+        self.receiver = context.socket(zmq.PULL)
+        self.receiver.bind(RES)
         self.running = False
         self._callbacks = defaultdict(list)
 
     def stop(self):
+        self.receiver.close()
         self.running = False
         self.join(timeout=1.)
 
@@ -47,15 +48,6 @@ RES = 'ipc:///tmp/receiver'
 CTR = 'ipc:///tmp/controller'
 
 
-@contextmanager
-def PowerHose():
-    sender = Sender()
-    try:
-        yield sender
-    finally:
-        sender.stop()
-
-
 class Sender(object):
     """ Use this class to send jobs.
     """
@@ -63,27 +55,24 @@ class Sender(object):
         # Initialize a zeromq context
         self.context = zmq.Context()
         # Set up a channel to send work
-        self.ventilator_send = self.context.socket(zmq.PUSH)
-        self.ventilator_send.bind(WORK)
+        self.sender = self.context.socket(zmq.PUSH)
+        self.sender.bind(WORK)
         # Set up a channel to receive results
-        self.results_receiver = self.context.socket(zmq.PULL)
-        self.results_receiver.bind(RES)
-        self.receiver = Receiver(self.results_receiver)
+        self.receiver = Receiver(self.context)
         self.receiver.start()
 
         # Set up a channel to send control commands
-        self.control_sender = self.context.socket(zmq.PUB)
-        self.control_sender.bind(CTR)
+        self.controller = self.context.socket(zmq.PUB)
+        self.controller.bind(CTR)
 
     def stop(self):
         self.control('FINISH')
-        self.control_sender.close()
-        self.results_receiver.close()
-        self.ventilator_send.close()
+        self.controller.close()
+        self.sender.close()
         self.receiver.stop()
 
     def control(self, msg):
-        self.control_sender.send(msg)
+        self.controller.send(msg)
 
     def execute(self, func_name, data, timeout=5.):
         # create a job ID
@@ -98,7 +87,7 @@ class Sender(object):
             _result.append(data)
 
         self.receiver.register(done, job_id)
-        self.ventilator_send.send(job)
+        self.sender.send(job)
 
         # waiting for the result
         start = time.time()

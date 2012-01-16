@@ -1,3 +1,4 @@
+# XXX to be recoded with new standard
 import time
 import zmq
 from  multiprocessing import Process

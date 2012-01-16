@@ -1,4 +1,4 @@
-from powerhose.sender import PowerHose
+from powerhose import PowerHose
 from job_pb2 import Job
 
 
