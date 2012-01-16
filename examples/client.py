@@ -4,7 +4,6 @@ from job_pb2 import Job
 
 if __name__ == "__main__":
 
-    # Start the ventilator!
     with PowerHose() as ph:
         # sending some jobs
         for i in xrange(1, 10, 4):
@@ -17,3 +16,7 @@ if __name__ == "__main__":
             else:
                 res = job.FromString(result)
                 print '%d * %d = %d' % (i, i, res.value)
+
+    with PowerHose() as ph:
+        print ph.execute('nothing', 'xxx')
+
