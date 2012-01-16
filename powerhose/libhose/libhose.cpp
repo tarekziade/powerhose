@@ -117,7 +117,7 @@ namespace powerhose
             cout << "res is" << res << endl;
 
             // send back the result
-            string sres = job_id + ":" + res;
+            string sres = job_id + ":OK:" + res;
             message_t mres(sres.size());
             memcpy((void *)mres.data(), sres.data(), sres.size());
             cout << "sending " << sres << endl;

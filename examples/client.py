@@ -10,6 +10,10 @@ if __name__ == "__main__":
         for i in xrange(1, 10, 4):
             job = Job()
             job.value = i
-            result = ph.execute('square', job.SerializeToString())
-            res = job.FromString(result)
-            print '%d * %d = %d' % (i, i, res.value)
+            status, result = ph.execute('square', job.SerializeToString())
+            if status != 'OK':
+                print 'The job has failed'
+                print result
+            else:
+                res = job.FromString(result)
+                print '%d * %d = %d' % (i, i, res.value)

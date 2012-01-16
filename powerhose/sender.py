@@ -35,10 +35,15 @@ class Receiver(threading.Thread):
         while self.running:
             res = self.receiver.recv()
 
+            # the data we get back is composed of 3 fields
+            # - a job id
+            # - a status (OK or KO)
+            # - extra data that can be the result or a traceback
             job_id, data = res.split(':', 1)
+            status, data = data.split(':', 1)
 
             for callback in self._callbacks[job_id]:
-                callback(job_id, data)
+                callback(job_id, status, data)
 
             time.sleep(.1)
 
@@ -66,7 +71,7 @@ class Sender(object):
         self.controller.bind(CTR)
 
     def stop(self):
-        self.control('FINISH')
+        self.control('FINISH')   # not really used yet
         self.controller.close()
         self.sender.close()
         self.receiver.stop()
@@ -83,8 +88,8 @@ class Sender(object):
         # callback with the result
         _result = []
 
-        def done(job_id, data):
-            _result.append(data)
+        def done(job_id, status, data):
+            _result.append((status, data))
 
         self.receiver.register(done, job_id)
         self.sender.send(job)
