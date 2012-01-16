@@ -4,4 +4,5 @@ build:
 	cd powerhose/libhose; ar r libhose.a libhose.o
 	cp powerhose/libhose/libhose.a examples/
 	cp powerhose/libhose/libhose.h examples/
-	cd examples; g++ -o square job.pb.cc square.cpp -L . -lprotobuf 
+	cp powerhose/libhose/libhose.o examples/
+	cd examples; g++ -o square job.pb.cc square.cpp -L . -lprotobuf -llibhose
