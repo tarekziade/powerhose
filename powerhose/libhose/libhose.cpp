@@ -121,7 +121,8 @@ namespace powerhose
                 }
             }
             else {
-                res = "NONE";
+                res = "The function is unknown";
+                status = "KO";
             }
 
             cout << "res is" << res << endl;
