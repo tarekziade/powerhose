@@ -11,38 +11,45 @@
 using namespace zmq;
 using namespace std;
 
+
 void bye(int param) {
   cout << "Bye" << endl;
   // cleanup ?
   exit(1);
 }
 
+string msg2str(message_t* msg) {
+    // XXX how to copy directly into the string ?
+    size_t size = msg->size();
+    char data[msg->size() + 1];
+    memcpy(data, msg->data(), size);
+    data[size] = 0;
+    string res = data;
+    return res;
+}
+
+
 void worker() {
   static const char* const WORK = "ipc:///tmp/sender" ;
   static const char* const RES = "ipc:///tmp/receiver" ;
   static const char* const CTR = "ipc:///tmp/controller" ;
 
-  //cout << "Building a context" << endl;
   context_t ctx(1);
 
   // channel to receive work
-  //cout << "Starting the receiver channel" << endl;
   socket_t receiver(ctx, ZMQ_PULL);
   receiver.connect(WORK);
 
   // channel to send back results
-  //cout << "Starting the result channel" << endl;
   socket_t sender(ctx, ZMQ_PUSH) ;
   sender.connect(RES);
 
   // channel for the controller
-  //cout << "Starting the control channel" << endl;
   socket_t control(ctx, ZMQ_SUB) ;
   control.connect(CTR);
 
   // Set up a poller to multiplex the work receiver and
   // control receiver channels
-  //cout << "Starting the poller" << endl;
   zmq_pollitem_t items[2];
   items[0].socket = receiver;
   items[0].events = ZMQ_POLLIN;
@@ -50,34 +57,39 @@ void worker() {
   items[1].events = ZMQ_POLLIN;
 
   // now loop and accept messages from the poller
-  //cout << "Looping now..." << endl;
-
   while (true) {
     poll(items, 2, -1);
 
     // getting the receiver jobs
     for (short j = 0; j < items[0].revents; j++) {
         cout << "Worker " << getpid() << " received some work to do" << endl;
-
         message_t job;
         receiver.recv(&job);
 
-        // XXX why do I have to convert to a string again ?
-        // can't I pass it directly to  protobuf ?
-        char sjob[job.size()];
-        memcpy(sjob, job.data(), job.size());
+        string sjob = msg2str(&job);
+
+        cout << "Received " << sjob.data() << endl;
+
+        // extracting the id and the job data
+        size_t pos = sjob.find(':');
+        string job_data = sjob.substr(pos + 1, sjob.size() - pos);
+        string job_id = sjob.substr(0, pos);
 
         Job pjob;
-        pjob.ParseFromString(sjob);
+        pjob.ParseFromString(job_data);
 
-        cout << "Job Id " << pjob.id() << endl;
+        cout << "Job Id " << job_id << endl;
         cout << "Job func " << pjob.func() << endl;
         cout << "Job param " << pjob.param() << endl;
 
         // send back the result
         //message_t res(jpb.sized());
         //memcpy((void *) res.data (), sjob, job.size());
-        sender.send(job);
+        string sres = job_id + ":" + sjob.data();
+        message_t res(sres.size());
+        memcpy((void *)res.data(), sres.data(), sres.size());
+        cout << "sending " << sres << endl;
+        sender.send(res);
     }
 
     // getting the controller jobs
@@ -90,10 +102,9 @@ void worker() {
 
 }
 
-int main(int argc, const char* const argv[])
-{
-  signal(SIGINT, bye);
 
+int main(int argc, const char* const argv[]) {
+  signal(SIGINT, bye);
   int workers_count = 10;
   int pids [10];
   string sid;
@@ -123,7 +134,6 @@ int main(int argc, const char* const argv[])
             exit(1);
         }
      }
-
   }
   return 0;
 }

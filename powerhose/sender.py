@@ -1,18 +1,9 @@
 import time
+import os
+import binascii
 import zmq
 from  multiprocessing import Process
 import threading
-
-from powerhose.job_pb2 import Job
-
-
-_NUM = 0
-
-
-def _jobnum():
-    global _NUM
-    _NUM += 1
-    return _NUM
 
 
 class Receiver(threading.Thread):
@@ -32,9 +23,12 @@ class Receiver(threading.Thread):
         print 'Waiting for results'
         while self.running:
             res = self.receiver.recv()
-            print 'need to unserialize'
-            print 'received ' + str(res)
-            #self.rcpt[res['id']] = res
+            print 'received ' + res
+            job_id, data = res.split(':', 1)
+            print 'job id ' + job_id
+            self.rcpt[job_id] = data
+            time.sleep(.1)
+
 
 WORK = 'ipc:///tmp/sender'
 RES = 'ipc:///tmp/receiver'
@@ -56,7 +50,6 @@ class Sender(object):
         self.results = {}
         self.receiver = Receiver(self.results_receiver, self.results)
         self.receiver.start()
-        # store the reference of the function we want to use for our jobs
 
         # Set up a channel to send control commands
         self.control_sender = self.context.socket(zmq.PUB)
@@ -69,23 +62,22 @@ class Sender(object):
     def control(self, msg):
         self.control_sender.send(msg)
 
-    def execute(self, func, param):
+    def execute(self, job):
         # XXX timeout ? , async ?
         #
         # create a job ID
-        job_id = _jobnum()
-        job = Job()
-        job.id = job_id
-        job.func = func
-        job.param = param
+        short = binascii.b2a_hex(os.urandom(10))[:10]
+        job_id = str(int(time.time())) + short
+        job = '%s:%s' % (job_id, job)
+        self.ventilator_send.send(job)
 
-        self.ventilator_send.send(job.SerializeToString())
+        print 'sent ' + job_id
 
+        # XXX replace by a signal
         while job_id not in self.results:
             time.sleep(.1)
 
+        print 'get it'
         res = self.results[job_id]
         del self.results[job_id]
         return res
-
-
