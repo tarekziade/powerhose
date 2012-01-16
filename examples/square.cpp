@@ -23,7 +23,13 @@ string square(string job) {
 
 
 int main(int argc, const char* const argv[]) {
+  int num = 10;
+
+  // building the map of functions
+  Function fsquare = Function("square", &square);
   Functions functions;
-  functions.insert(Function("square", &square));
-  return run_workers(10, functions);
+  functions.insert(fsquare);
+
+  // running the workers
+  return run_workers(num, functions);
 }

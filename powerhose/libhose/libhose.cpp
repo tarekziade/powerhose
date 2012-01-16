@@ -125,7 +125,7 @@ namespace powerhose
 
     }
 
-    int run_workers(int count, Functions functions) {
+  int run_workers(int count, Functions functions) {
     signal(SIGINT, bye);
     int pids [10];
     string sid;

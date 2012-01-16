@@ -5,4 +5,4 @@ build:
 	cp powerhose/libhose/libhose.a examples/
 	cp powerhose/libhose/libhose.h examples/
 	cp powerhose/libhose/libhose.o examples/
-	cd examples; g++ -o square job.pb.cc square.cpp -L . -lprotobuf -llibhose
+	cd examples; g++ -Wall -o square job.pb.cc square.cpp libhose.o -lprotobuf -lzmq
