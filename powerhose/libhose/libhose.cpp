@@ -12,147 +12,151 @@
 using namespace zmq;
 using namespace std;
 
+namespace powerhose
+{
 
-void bye(int param) {
-  cout << "Bye" << endl;
-  // cleanup ?
-  exit(1);
-}
-
-
-string msg2str(message_t* msg) {
-    size_t size = msg->size();
-    char data[msg->size() + 1];
-    memcpy(data, msg->data(), size);
-    data[size] = 0;
-    string res = data;
-    return res;
-}
+    void bye(int param) {
+    cout << "Bye" << endl;
+    // cleanup ?
+    exit(1);
+    }
 
 
-void worker(Functions functions) {
-  static const char* const WORK = "ipc:///tmp/sender" ;
-  static const char* const RES = "ipc:///tmp/receiver" ;
-  static const char* const CTR = "ipc:///tmp/controller" ;
+    string msg2str(message_t* msg) {
+        size_t size = msg->size();
+        char data[msg->size() + 1];
+        memcpy(data, msg->data(), size);
+        data[size] = 0;
+        string res = data;
+        return res;
+    }
 
-  context_t ctx(1);
 
-  // channel to receive work
-  socket_t receiver(ctx, ZMQ_PULL);
-  receiver.connect(WORK);
+    void worker(Functions functions) {
+    static const char* const WORK = "ipc:///tmp/sender" ;
+    static const char* const RES = "ipc:///tmp/receiver" ;
+    static const char* const CTR = "ipc:///tmp/controller" ;
 
-  // channel to send back results
-  socket_t sender(ctx, ZMQ_PUSH) ;
-  sender.connect(RES);
+    context_t ctx(1);
 
-  // channel for the controller
-  socket_t control(ctx, ZMQ_SUB) ;
-  control.connect(CTR);
+    // channel to receive work
+    socket_t receiver(ctx, ZMQ_PULL);
+    receiver.connect(WORK);
 
-  // Set up a poller to multiplex the work receiver and
-  // control receiver channels
-  zmq_pollitem_t items[2];
-  items[0].socket = receiver;
-  items[0].events = ZMQ_POLLIN;
-  items[1].socket = control;
-  items[1].events = ZMQ_POLLIN;
+    // channel to send back results
+    socket_t sender(ctx, ZMQ_PUSH) ;
+    sender.connect(RES);
 
-  // now loop and accept messages from the poller
-  while (true) {
-    poll(items, 2, -1);
+    // channel for the controller
+    socket_t control(ctx, ZMQ_SUB) ;
+    control.connect(CTR);
 
-    // getting the receiver jobs
-    for (short j = 0; j < items[0].revents; j++) {
-        cout << "Worker " << getpid() << " received some work to do" << endl;
-        message_t job;
-        receiver.recv(&job);
+    // Set up a poller to multiplex the work receiver and
+    // control receiver channels
+    zmq_pollitem_t items[2];
+    items[0].socket = receiver;
+    items[0].events = ZMQ_POLLIN;
+    items[1].socket = control;
+    items[1].events = ZMQ_POLLIN;
 
-        string sjob = msg2str(&job);
+    // now loop and accept messages from the poller
+    while (true) {
+        poll(items, 2, -1);
 
-        cout << "Received " << sjob.data() << endl;
+        // getting the receiver jobs
+        for (short j = 0; j < items[0].revents; j++) {
+            cout << "Worker " << getpid() << " received some work to do" << endl;
+            message_t job;
+            receiver.recv(&job);
 
-        // extracting the id, the func name and the job data
-        size_t pos = sjob.find(':');
-        string job_data = sjob.substr(pos + 1, sjob.size() - pos);
-        string job_id = sjob.substr(0, pos);
+            string sjob = powerhose::msg2str(&job);
 
-        pos = job_data.find(':');
-        string job_data2 = job_data.substr(pos + 1, job_data.size() - pos);
-        string job_func = job_data.substr(0, pos);
+            cout << "Received " << sjob.data() << endl;
 
-        Functions::iterator iter = functions.begin();
-        iter = functions.find(job_func);
+            // extracting the id, the func name and the job data
+            size_t pos = sjob.find(':');
+            string job_data = sjob.substr(pos + 1, sjob.size() - pos);
+            string job_id = sjob.substr(0, pos);
 
-        string (*function)(string) = NULL;
+            pos = job_data.find(':');
+            string job_data2 = job_data.substr(pos + 1, job_data.size() - pos);
+            string job_func = job_data.substr(0, pos);
 
-        if (iter != functions.end())  {
-            cout << "Value is: " << iter->second << '\n';
-            function = iter->second;
+            Functions::iterator iter = functions.begin();
+            iter = functions.find(job_func);
+
+            string (*function)(string) = NULL;
+
+            if (iter != functions.end())  {
+                cout << "Value is: " << iter->second << '\n';
+                function = iter->second;
+            }
+            else {
+                cout << "Key is not in my_map" << '\n';
+                function = NULL;
+            }
+
+            string res;
+            cout << "calling the func " << job_data2 << endl;
+
+            if (function) {
+                res = (*function)(job_data2);
+            }
+            else {
+                res = "NONE";
+            }
+            cout << "res is" << res << endl;
+
+            // send back the result
+            string sres = job_id + ":" + res;
+            message_t mres(sres.size());
+            memcpy((void *)mres.data(), sres.data(), sres.size());
+            cout << "sending " << sres << endl;
+            sender.send(mres);
+        }
+
+        // getting the controller jobs
+        for (short j = 0; j < items[1].revents; j++) {
+            message_t job;
+            control.recv(&job);
+            // do something with the message
+        }
+    }
+
+    }
+
+    int run_workers(int count, Functions functions) {
+    signal(SIGINT, bye);
+    int pids [10];
+    string sid;
+    short i = 1;
+
+    while (i < count) {
+        pid_t pid = fork();
+        if (pid == 0) {
+            sid = "child";
+            pids[i] = pid;
+            cout << "Starting worker " << getpid() << endl;
+            worker(functions);
+            i = count;
         }
         else {
-            cout << "Key is not in my_map" << '\n';
-            function = NULL;
+            sid = "parent";
+            i++;
         }
-
-        string res;
-        cout << "calling the func " << job_data2 << endl;
-
-        if (function) {
-            res = (*function)(job_data2);
+    }
+    if (sid == "parent") {
+        // here, loop to wait for all childs to die.
+        for (int i = 0; i < count; ++i) {
+            int status;
+            while (-1 == waitpid(pids[i], &status, 0));
+            if (!WIFEXITED(status) || WEXITSTATUS(status) != 0) {
+                cerr << "Process " << i << " (pid " << pids[i] << ") failed" << endl;
+                exit(1);
+            }
         }
-        else {
-            res = "NONE";
-        }
-        cout << "res is" << res << endl;
-
-        // send back the result
-        string sres = job_id + ":" + res;
-        message_t mres(sres.size());
-        memcpy((void *)mres.data(), sres.data(), sres.size());
-        cout << "sending " << sres << endl;
-        sender.send(mres);
     }
+    return 0;
 
-    // getting the controller jobs
-    for (short j = 0; j < items[1].revents; j++) {
-        message_t job;
-        control.recv(&job);
-        // do something with the message
     }
-  }
-
-}
-
-int run_workers(int count, map<string, string(*)(string)> functions) {
-  int pids [10];
-  string sid;
-  short i = 1;
-
-  while (i < count) {
-    pid_t pid = fork();
-    if (pid == 0) {
-        sid = "child";
-        pids[i] = pid;
-        cout << "Starting worker " << getpid() << endl;
-        worker(functions);
-        i = count;
-    }
-    else {
-        sid = "parent";
-        i++;
-    }
-  }
-  if (sid == "parent") {
-     // here, loop to wait for all childs to die.
-     for (int i = 0; i < count; ++i) {
-        int status;
-        while (-1 == waitpid(pids[i], &status, 0));
-        if (!WIFEXITED(status) || WEXITSTATUS(status) != 0) {
-            cerr << "Process " << i << " (pid " << pids[i] << ") failed" << endl;
-            exit(1);
-        }
-     }
-  }
-  return 0;
-
 }
