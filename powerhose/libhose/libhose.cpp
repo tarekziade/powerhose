@@ -4,15 +4,13 @@
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "job.pb.h"
 #include <sys/wait.h>
 #include <map>
 
+#include <libhose.h>
 
 using namespace zmq;
 using namespace std;
-
-typedef std::map<string, string(*)(string)> Functions;
 
 
 void bye(int param) {
@@ -125,15 +123,6 @@ void worker(Functions functions) {
 
 }
 
-string square(string job) {
-    Job pjob;
-    pjob.ParseFromString(job);
-    pjob.set_param(pjob.param() * pjob.param());
-    string res;
-    pjob.SerializeToString(&res);
-    return res;
-}
-
 int run_workers(int count, map<string, string(*)(string)> functions) {
   int pids [10];
   string sid;
@@ -166,12 +155,4 @@ int run_workers(int count, map<string, string(*)(string)> functions) {
   }
   return 0;
 
-}
-
-
-int main(int argc, const char* const argv[]) {
-  signal(SIGINT, bye);
-  map<string, string(*)(string)> functions;
-  functions.insert(pair<string, string (*)(string)>("square", &square));
-  return run_workers(10, functions);
 }

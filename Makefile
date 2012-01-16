@@ -1,3 +1,4 @@
 
 build:
-	cd powerhose; g++ workers.cpp job.pb.cc -lpthread -lzmq -lprotobuf -lstdc++ -o server -Wall
+	cd powerhose/libhose; g++ -c libhose.cpp -I . -lpthread -lzmq -o libhose.o -Wall
+	cd powerhose/libhose; ar r libhose.a libhose.o
