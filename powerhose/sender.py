@@ -4,19 +4,28 @@ import binascii
 import zmq
 from  multiprocessing import Process
 import threading
+from collections import defaultdict
+
+
+class TimeoutError(Exception):
+    pass
 
 
 class Receiver(threading.Thread):
-
-    def __init__(self, receiver, rcpt):
+    """Receive results asynchronously
+    """
+    def __init__(self, receiver):
         threading.Thread.__init__(self)
         self.receiver = receiver
-        self.rcpt = rcpt
         self.running = False
+        self._callbacks = defaultdict(list)
 
     def stop(self):
         self.running = False
         self.join(timeout=1.)
+
+    def register(self, callback, job_id):
+        self._callbacks[job_id].append(callback)
 
     def run(self):
         self.running = True
@@ -24,7 +33,9 @@ class Receiver(threading.Thread):
         while self.running:
             res = self.receiver.recv()
             job_id, data = res.split(':', 1)
-            self.rcpt[job_id] = data
+            for callback in self._callbacks[job_id]:
+                callback(job_id, data)
+
             time.sleep(.1)
 
 
@@ -45,8 +56,7 @@ class Sender(object):
         # Set up a channel to receive results
         self.results_receiver = self.context.socket(zmq.PULL)
         self.results_receiver.bind(RES)
-        self.results = {}
-        self.receiver = Receiver(self.results_receiver, self.results)
+        self.receiver = Receiver(self.results_receiver)
         self.receiver.start()
 
         # Set up a channel to send control commands
@@ -60,22 +70,32 @@ class Sender(object):
     def control(self, msg):
         self.control_sender.send(msg)
 
-    def execute(self, func_name, data):
-        # XXX timeout ? , async ?
-        #
+    def execute(self, func_name, data, timeout=5.):
         # create a job ID
         short = binascii.b2a_hex(os.urandom(10))[:10]
         job_id = str(int(time.time())) + short
         job = '%s:%s:%s' % (job_id, func_name, data)
+
+        # callback with the result
+        _result = []
+
+        def done(job_id, data):
+            _result.append(data)
+
+        self.receiver.register(done, job_id)
         self.ventilator_send.send(job)
 
-        # XXX replace by a signal
+        # waiting for the result
+        start = time.time()
         try:
-            while job_id not in self.results:
+            while time.time() - start < timeout:
+                if len(_result) > 0:
+                    break
                 time.sleep(.1)
         except KeyboardInterrupt:
-            return
+            pass
 
-        res = self.results[job_id]
-        del self.results[job_id]
-        return res
+        if len(_result) == 0:
+            raise TimeoutError()
+
+        return _result[0]
