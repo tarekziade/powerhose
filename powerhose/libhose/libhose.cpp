@@ -14,15 +14,14 @@ using namespace std;
 
 namespace powerhose
 {
-
   socket_t* sockets[3];
-
   void bye(int param) {
-    cout << "Bye from " << getpid() << endl;
-
     // cleanup
     for (int i=0; i<3; i++) {
-        sockets[i]->close();
+        if (sockets[i]) {
+            sockets[i]->close();
+            sockets[i] = NULL;
+        }
     }
     exit(1);
   }
@@ -151,7 +150,7 @@ namespace powerhose
   int run_workers(int count, Functions functions) {
     signal(SIGINT, bye);
     signal(SIGTERM, bye);
-
+    cout << "Starting 10 workers." << endl;
     int pids [10];
     string sid;
     short i = 1;
@@ -161,7 +160,6 @@ namespace powerhose
         if (pid == 0) {
             sid = "child";
             pids[i] = pid;
-            cout << "Starting worker " << getpid() << endl;
             worker(functions);
             i = count;
         }
@@ -172,7 +170,6 @@ namespace powerhose
     }
     if (sid == "parent") {
         // here, loop to wait for all childs to die.
-        cout << "Loop" << endl;
         for (int i = 0; i < count; ++i) {
             int status;
             while (-1 == waitpid(pids[i], &status, 0));
