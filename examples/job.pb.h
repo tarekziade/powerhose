@@ -88,48 +88,24 @@ class Job : public ::google::protobuf::Message {
   
   // accessors -------------------------------------------------------
   
-  // required int32 id = 1;
-  inline bool has_id() const;
-  inline void clear_id();
-  static const int kIdFieldNumber = 1;
-  inline ::google::protobuf::int32 id() const;
-  inline void set_id(::google::protobuf::int32 value);
-  
-  // required string func = 2;
-  inline bool has_func() const;
-  inline void clear_func();
-  static const int kFuncFieldNumber = 2;
-  inline const ::std::string& func() const;
-  inline void set_func(const ::std::string& value);
-  inline void set_func(const char* value);
-  inline void set_func(const char* value, size_t size);
-  inline ::std::string* mutable_func();
-  inline ::std::string* release_func();
-  
-  // required int32 param = 3;
-  inline bool has_param() const;
-  inline void clear_param();
-  static const int kParamFieldNumber = 3;
-  inline ::google::protobuf::int32 param() const;
-  inline void set_param(::google::protobuf::int32 value);
+  // required int32 value = 1;
+  inline bool has_value() const;
+  inline void clear_value();
+  static const int kValueFieldNumber = 1;
+  inline ::google::protobuf::int32 value() const;
+  inline void set_value(::google::protobuf::int32 value);
   
   // @@protoc_insertion_point(class_scope:Job)
  private:
-  inline void set_has_id();
-  inline void clear_has_id();
-  inline void set_has_func();
-  inline void clear_has_func();
-  inline void set_has_param();
-  inline void clear_has_param();
+  inline void set_has_value();
+  inline void clear_has_value();
   
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
   
-  ::std::string* func_;
-  ::google::protobuf::int32 id_;
-  ::google::protobuf::int32 param_;
+  ::google::protobuf::int32 value_;
   
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(3 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(1 + 31) / 32];
   
   friend void  protobuf_AddDesc_job_2eproto();
   friend void protobuf_AssignDesc_job_2eproto();
@@ -145,106 +121,26 @@ class Job : public ::google::protobuf::Message {
 
 // Job
 
-// required int32 id = 1;
-inline bool Job::has_id() const {
+// required int32 value = 1;
+inline bool Job::has_value() const {
   return (_has_bits_[0] & 0x00000001u) != 0;
 }
-inline void Job::set_has_id() {
+inline void Job::set_has_value() {
   _has_bits_[0] |= 0x00000001u;
 }
-inline void Job::clear_has_id() {
+inline void Job::clear_has_value() {
   _has_bits_[0] &= ~0x00000001u;
 }
-inline void Job::clear_id() {
-  id_ = 0;
-  clear_has_id();
+inline void Job::clear_value() {
+  value_ = 0;
+  clear_has_value();
 }
-inline ::google::protobuf::int32 Job::id() const {
-  return id_;
+inline ::google::protobuf::int32 Job::value() const {
+  return value_;
 }
-inline void Job::set_id(::google::protobuf::int32 value) {
-  set_has_id();
-  id_ = value;
-}
-
-// required string func = 2;
-inline bool Job::has_func() const {
-  return (_has_bits_[0] & 0x00000002u) != 0;
-}
-inline void Job::set_has_func() {
-  _has_bits_[0] |= 0x00000002u;
-}
-inline void Job::clear_has_func() {
-  _has_bits_[0] &= ~0x00000002u;
-}
-inline void Job::clear_func() {
-  if (func_ != &::google::protobuf::internal::kEmptyString) {
-    func_->clear();
-  }
-  clear_has_func();
-}
-inline const ::std::string& Job::func() const {
-  return *func_;
-}
-inline void Job::set_func(const ::std::string& value) {
-  set_has_func();
-  if (func_ == &::google::protobuf::internal::kEmptyString) {
-    func_ = new ::std::string;
-  }
-  func_->assign(value);
-}
-inline void Job::set_func(const char* value) {
-  set_has_func();
-  if (func_ == &::google::protobuf::internal::kEmptyString) {
-    func_ = new ::std::string;
-  }
-  func_->assign(value);
-}
-inline void Job::set_func(const char* value, size_t size) {
-  set_has_func();
-  if (func_ == &::google::protobuf::internal::kEmptyString) {
-    func_ = new ::std::string;
-  }
-  func_->assign(reinterpret_cast<const char*>(value), size);
-}
-inline ::std::string* Job::mutable_func() {
-  set_has_func();
-  if (func_ == &::google::protobuf::internal::kEmptyString) {
-    func_ = new ::std::string;
-  }
-  return func_;
-}
-inline ::std::string* Job::release_func() {
-  clear_has_func();
-  if (func_ == &::google::protobuf::internal::kEmptyString) {
-    return NULL;
-  } else {
-    ::std::string* temp = func_;
-    func_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
-    return temp;
-  }
-}
-
-// required int32 param = 3;
-inline bool Job::has_param() const {
-  return (_has_bits_[0] & 0x00000004u) != 0;
-}
-inline void Job::set_has_param() {
-  _has_bits_[0] |= 0x00000004u;
-}
-inline void Job::clear_has_param() {
-  _has_bits_[0] &= ~0x00000004u;
-}
-inline void Job::clear_param() {
-  param_ = 0;
-  clear_has_param();
-}
-inline ::google::protobuf::int32 Job::param() const {
-  return param_;
-}
-inline void Job::set_param(::google::protobuf::int32 value) {
-  set_has_param();
-  param_ = value;
+inline void Job::set_value(::google::protobuf::int32 value) {
+  set_has_value();
+  value_ = value;
 }
 
 

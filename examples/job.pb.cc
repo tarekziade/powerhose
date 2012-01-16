@@ -29,10 +29,8 @@ void protobuf_AssignDesc_job_2eproto() {
       "job.proto");
   GOOGLE_CHECK(file != NULL);
   Job_descriptor_ = file->message_type(0);
-  static const int Job_offsets_[3] = {
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Job, id_),
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Job, func_),
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Job, param_),
+  static const int Job_offsets_[1] = {
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Job, value_),
   };
   Job_reflection_ =
     new ::google::protobuf::internal::GeneratedMessageReflection(
@@ -75,8 +73,7 @@ void protobuf_AddDesc_job_2eproto() {
   GOOGLE_PROTOBUF_VERIFY_VERSION;
 
   ::google::protobuf::DescriptorPool::InternalAddGeneratedFile(
-    "\n\tjob.proto\".\n\003Job\022\n\n\002id\030\001 \002(\005\022\014\n\004func\030\002"
-    " \002(\t\022\r\n\005param\030\003 \002(\005", 59);
+    "\n\tjob.proto\"\024\n\003Job\022\r\n\005value\030\001 \002(\005", 33);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
     "job.proto", &protobuf_RegisterTypes);
   Job::default_instance_ = new Job();
@@ -95,9 +92,7 @@ struct StaticDescriptorInitializer_job_2eproto {
 // ===================================================================
 
 #ifndef _MSC_VER
-const int Job::kIdFieldNumber;
-const int Job::kFuncFieldNumber;
-const int Job::kParamFieldNumber;
+const int Job::kValueFieldNumber;
 #endif  // !_MSC_VER
 
 Job::Job()
@@ -116,9 +111,7 @@ Job::Job(const Job& from)
 
 void Job::SharedCtor() {
   _cached_size_ = 0;
-  id_ = 0;
-  func_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
-  param_ = 0;
+  value_ = 0;
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
 }
 
@@ -127,9 +120,6 @@ Job::~Job() {
 }
 
 void Job::SharedDtor() {
-  if (func_ != &::google::protobuf::internal::kEmptyString) {
-    delete func_;
-  }
   if (this != default_instance_) {
   }
 }
@@ -156,13 +146,7 @@ Job* Job::New() const {
 
 void Job::Clear() {
   if (_has_bits_[0 / 32] & (0xffu << (0 % 32))) {
-    id_ = 0;
-    if (has_func()) {
-      if (func_ != &::google::protobuf::internal::kEmptyString) {
-        func_->clear();
-      }
-    }
-    param_ = 0;
+    value_ = 0;
   }
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
   mutable_unknown_fields()->Clear();
@@ -174,47 +158,14 @@ bool Job::MergePartialFromCodedStream(
   ::google::protobuf::uint32 tag;
   while ((tag = input->ReadTag()) != 0) {
     switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
-      // required int32 id = 1;
+      // required int32 value = 1;
       case 1: {
         if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
             ::google::protobuf::internal::WireFormatLite::WIRETYPE_VARINT) {
           DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
                    ::google::protobuf::int32, ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
-                 input, &id_)));
-          set_has_id();
-        } else {
-          goto handle_uninterpreted;
-        }
-        if (input->ExpectTag(18)) goto parse_func;
-        break;
-      }
-      
-      // required string func = 2;
-      case 2: {
-        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
-            ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
-         parse_func:
-          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
-                input, this->mutable_func()));
-          ::google::protobuf::internal::WireFormat::VerifyUTF8String(
-            this->func().data(), this->func().length(),
-            ::google::protobuf::internal::WireFormat::PARSE);
-        } else {
-          goto handle_uninterpreted;
-        }
-        if (input->ExpectTag(24)) goto parse_param;
-        break;
-      }
-      
-      // required int32 param = 3;
-      case 3: {
-        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
-            ::google::protobuf::internal::WireFormatLite::WIRETYPE_VARINT) {
-         parse_param:
-          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   ::google::protobuf::int32, ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
-                 input, &param_)));
-          set_has_param();
+                 input, &value_)));
+          set_has_value();
         } else {
           goto handle_uninterpreted;
         }
@@ -240,23 +191,9 @@ bool Job::MergePartialFromCodedStream(
 
 void Job::SerializeWithCachedSizes(
     ::google::protobuf::io::CodedOutputStream* output) const {
-  // required int32 id = 1;
-  if (has_id()) {
-    ::google::protobuf::internal::WireFormatLite::WriteInt32(1, this->id(), output);
-  }
-  
-  // required string func = 2;
-  if (has_func()) {
-    ::google::protobuf::internal::WireFormat::VerifyUTF8String(
-      this->func().data(), this->func().length(),
-      ::google::protobuf::internal::WireFormat::SERIALIZE);
-    ::google::protobuf::internal::WireFormatLite::WriteString(
-      2, this->func(), output);
-  }
-  
-  // required int32 param = 3;
-  if (has_param()) {
-    ::google::protobuf::internal::WireFormatLite::WriteInt32(3, this->param(), output);
+  // required int32 value = 1;
+  if (has_value()) {
+    ::google::protobuf::internal::WireFormatLite::WriteInt32(1, this->value(), output);
   }
   
   if (!unknown_fields().empty()) {
@@ -267,24 +204,9 @@ void Job::SerializeWithCachedSizes(
 
 ::google::protobuf::uint8* Job::SerializeWithCachedSizesToArray(
     ::google::protobuf::uint8* target) const {
-  // required int32 id = 1;
-  if (has_id()) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteInt32ToArray(1, this->id(), target);
-  }
-  
-  // required string func = 2;
-  if (has_func()) {
-    ::google::protobuf::internal::WireFormat::VerifyUTF8String(
-      this->func().data(), this->func().length(),
-      ::google::protobuf::internal::WireFormat::SERIALIZE);
-    target =
-      ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
-        2, this->func(), target);
-  }
-  
-  // required int32 param = 3;
-  if (has_param()) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteInt32ToArray(3, this->param(), target);
+  // required int32 value = 1;
+  if (has_value()) {
+    target = ::google::protobuf::internal::WireFormatLite::WriteInt32ToArray(1, this->value(), target);
   }
   
   if (!unknown_fields().empty()) {
@@ -298,25 +220,11 @@ int Job::ByteSize() const {
   int total_size = 0;
   
   if (_has_bits_[0 / 32] & (0xffu << (0 % 32))) {
-    // required int32 id = 1;
-    if (has_id()) {
+    // required int32 value = 1;
+    if (has_value()) {
       total_size += 1 +
         ::google::protobuf::internal::WireFormatLite::Int32Size(
-          this->id());
-    }
-    
-    // required string func = 2;
-    if (has_func()) {
-      total_size += 1 +
-        ::google::protobuf::internal::WireFormatLite::StringSize(
-          this->func());
-    }
-    
-    // required int32 param = 3;
-    if (has_param()) {
-      total_size += 1 +
-        ::google::protobuf::internal::WireFormatLite::Int32Size(
-          this->param());
+          this->value());
     }
     
   }
@@ -346,14 +254,8 @@ void Job::MergeFrom(const ::google::protobuf::Message& from) {
 void Job::MergeFrom(const Job& from) {
   GOOGLE_CHECK_NE(&from, this);
   if (from._has_bits_[0 / 32] & (0xffu << (0 % 32))) {
-    if (from.has_id()) {
-      set_id(from.id());
-    }
-    if (from.has_func()) {
-      set_func(from.func());
-    }
-    if (from.has_param()) {
-      set_param(from.param());
+    if (from.has_value()) {
+      set_value(from.value());
     }
   }
   mutable_unknown_fields()->MergeFrom(from.unknown_fields());
@@ -372,16 +274,14 @@ void Job::CopyFrom(const Job& from) {
 }
 
 bool Job::IsInitialized() const {
-  if ((_has_bits_[0] & 0x00000007) != 0x00000007) return false;
+  if ((_has_bits_[0] & 0x00000001) != 0x00000001) return false;
   
   return true;
 }
 
 void Job::Swap(Job* other) {
   if (other != this) {
-    std::swap(id_, other->id_);
-    std::swap(func_, other->func_);
-    std::swap(param_, other->param_);
+    std::swap(value_, other->value_);
     std::swap(_has_bits_[0], other->_has_bits_[0]);
     _unknown_fields_.Swap(&other->_unknown_fields_);
     std::swap(_cached_size_, other->_cached_size_);

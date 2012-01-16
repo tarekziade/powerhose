@@ -11,7 +11,7 @@ from google.protobuf import descriptor_pb2
 DESCRIPTOR = descriptor.FileDescriptor(
   name='job.proto',
   package='',
-  serialized_pb='\n\tjob.proto\".\n\x03Job\x12\n\n\x02id\x18\x01 \x02(\x05\x12\x0c\n\x04\x66unc\x18\x02 \x02(\t\x12\r\n\x05param\x18\x03 \x02(\x05')
+  serialized_pb='\n\tjob.proto\"\x14\n\x03Job\x12\r\n\x05value\x18\x01 \x02(\x05')
 
 
 
@@ -24,22 +24,8 @@ _JOB = descriptor.Descriptor(
   containing_type=None,
   fields=[
     descriptor.FieldDescriptor(
-      name='id', full_name='Job.id', index=0,
+      name='value', full_name='Job.value', index=0,
       number=1, type=5, cpp_type=1, label=2,
-      has_default_value=False, default_value=0,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      options=None),
-    descriptor.FieldDescriptor(
-      name='func', full_name='Job.func', index=1,
-      number=2, type=9, cpp_type=9, label=2,
-      has_default_value=False, default_value=unicode("", "utf-8"),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      options=None),
-    descriptor.FieldDescriptor(
-      name='param', full_name='Job.param', index=2,
-      number=3, type=5, cpp_type=1, label=2,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
@@ -54,7 +40,7 @@ _JOB = descriptor.Descriptor(
   is_extendable=False,
   extension_ranges=[],
   serialized_start=13,
-  serialized_end=59,
+  serialized_end=33,
 )
 
 DESCRIPTOR.message_types_by_name['Job'] = _JOB

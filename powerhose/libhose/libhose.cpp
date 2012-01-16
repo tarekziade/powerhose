@@ -15,14 +15,14 @@ using namespace std;
 namespace powerhose
 {
 
-    void bye(int param) {
-    cout << "Bye" << endl;
+  void bye(int param) {
+    cout << "Bye from " << getpid() << endl;
     // cleanup ?
     exit(1);
-    }
+  }
 
 
-    string msg2str(message_t* msg) {
+  string msg2str(message_t* msg) {
         size_t size = msg->size();
         char data[msg->size() + 1];
         memcpy(data, msg->data(), size);
@@ -32,7 +32,7 @@ namespace powerhose
     }
 
 
-    void worker(Functions functions) {
+  void worker(Functions functions) {
     static const char* const WORK = "ipc:///tmp/sender" ;
     static const char* const RES = "ipc:///tmp/receiver" ;
     static const char* const CTR = "ipc:///tmp/controller" ;
@@ -119,7 +119,10 @@ namespace powerhose
         for (short j = 0; j < items[1].revents; j++) {
             message_t job;
             control.recv(&job);
+            string sjob = powerhose::msg2str(&job);
+
             // do something with the message
+            cout << "Received an order " << sjob << endl;
         }
     }
 
@@ -127,6 +130,8 @@ namespace powerhose
 
   int run_workers(int count, Functions functions) {
     signal(SIGINT, bye);
+    signal(SIGTERM, bye);
+
     int pids [10];
     string sid;
     short i = 1;
@@ -147,6 +152,7 @@ namespace powerhose
     }
     if (sid == "parent") {
         // here, loop to wait for all childs to die.
+        cout << "Loop" << endl;
         for (int i = 0; i < count; ++i) {
             int status;
             while (-1 == waitpid(pids[i], &status, 0));
@@ -155,8 +161,9 @@ namespace powerhose
                 exit(1);
             }
         }
+        cout << "Exiting main " << getpid() << endl;
     }
-    return 0;
 
+    return 0;
     }
 }

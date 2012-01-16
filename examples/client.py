@@ -11,13 +11,10 @@ if __name__ == "__main__":
         # sending some jobs
         for i in xrange(1, 10, 4):
             job = Job()
-            job.func = 'square'
-            job.param = i
-            job.id = 1
+            job.value = i
             result = ventilator.execute('square', job.SerializeToString())
-            res = Job()
-            res = res.FromString(result)
-            print '%d * %d = %d' % (i, i, res.param)
+            res = job.FromString(result)
+            print '%d * %d = %d' % (i, i, res.value)
 
     finally:
         ventilator.stop()

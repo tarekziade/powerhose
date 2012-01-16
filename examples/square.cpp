@@ -15,7 +15,7 @@ using namespace powerhose;
 string square(string job) {
     Job pjob;
     pjob.ParseFromString(job);
-    pjob.set_param(pjob.param() * pjob.param());
+    pjob.set_value(pjob.value() * pjob.value());
     string res;
     pjob.SerializeToString(&res);
     return res;

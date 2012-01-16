@@ -1,5 +1,3 @@
 message Job {
-  required int32 id = 1;
-  required string func = 2;
-  required int32 param = 3;
+  required int32 value = 1;
 }
