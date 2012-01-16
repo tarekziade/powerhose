@@ -22,7 +22,9 @@ if __name__ == "__main__":
         job.func = 'square'
         job.param = i
         job.id = 1
-        ventilator.execute('square', job.SerializeToString())
+        result = ventilator.execute('square', job.SerializeToString())
+        res = Job()
+        res = res.FromString(result)
+        print '%d * %d = %d' % (i, i, res.param)
 
-    print 'stopping'
     ventilator.stop()

@@ -12,6 +12,8 @@
 using namespace zmq;
 using namespace std;
 
+typedef std::map<string, string(*)(string)> Functions;
+
 
 void bye(int param) {
   cout << "Bye" << endl;
@@ -19,8 +21,8 @@ void bye(int param) {
   exit(1);
 }
 
+
 string msg2str(message_t* msg) {
-    // XXX how to copy directly into the string ?
     size_t size = msg->size();
     char data[msg->size() + 1];
     memcpy(data, msg->data(), size);
@@ -28,9 +30,6 @@ string msg2str(message_t* msg) {
     string res = data;
     return res;
 }
-
-
-typedef std::map<string, string(*)(string)> Functions;
 
 
 void worker(Functions functions) {
@@ -135,25 +134,19 @@ string square(string job) {
     return res;
 }
 
-
-int main(int argc, const char* const argv[]) {
-  signal(SIGINT, bye);
-  int workers_count = 10;
+int run_workers(int count, map<string, string(*)(string)> functions) {
   int pids [10];
   string sid;
   short i = 1;
 
-  map<string, string(*)(string)> functions;
-  functions.insert(pair<string, string (*)(string)>("square", &square));
-
-  while (i < workers_count) {
+  while (i < count) {
     pid_t pid = fork();
     if (pid == 0) {
         sid = "child";
         pids[i] = pid;
         cout << "Starting worker " << getpid() << endl;
         worker(functions);
-        i = workers_count;
+        i = count;
     }
     else {
         sid = "parent";
@@ -162,7 +155,7 @@ int main(int argc, const char* const argv[]) {
   }
   if (sid == "parent") {
      // here, loop to wait for all childs to die.
-     for (int i = 0; i < workers_count; ++i) {
+     for (int i = 0; i < count; ++i) {
         int status;
         while (-1 == waitpid(pids[i], &status, 0));
         if (!WIFEXITED(status) || WEXITSTATUS(status) != 0) {
@@ -172,4 +165,13 @@ int main(int argc, const char* const argv[]) {
      }
   }
   return 0;
+
+}
+
+
+int main(int argc, const char* const argv[]) {
+  signal(SIGINT, bye);
+  map<string, string(*)(string)> functions;
+  functions.insert(pair<string, string (*)(string)>("square", &square));
+  return run_workers(10, functions);
 }

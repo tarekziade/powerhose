@@ -16,16 +16,14 @@ class Receiver(threading.Thread):
 
     def stop(self):
         self.running = False
-        self.join()
+        self.join(timeout=1.)
 
     def run(self):
         self.running = True
-        print 'Waiting for results'
+
         while self.running:
             res = self.receiver.recv()
-            print 'received ' + res
             job_id, data = res.split(':', 1)
-            print 'job id ' + job_id
             self.rcpt[job_id] = data
             time.sleep(.1)
 
@@ -71,13 +69,13 @@ class Sender(object):
         job = '%s:%s:%s' % (job_id, func_name, data)
         self.ventilator_send.send(job)
 
-        print 'sent ' + job_id
-
         # XXX replace by a signal
-        while job_id not in self.results:
-            time.sleep(.1)
+        try:
+            while job_id not in self.results:
+                time.sleep(.1)
+        except KeyboardInterrupt:
+            return
 
-        print 'get it'
         res = self.results[job_id]
         del self.results[job_id]
         return res
