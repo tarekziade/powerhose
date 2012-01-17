@@ -15,6 +15,9 @@ using namespace std;
 namespace powerhose
 {
   socket_t* sockets[3];
+  void (*teardown)(Registry) = NULL;
+  Registry registry;
+
   void bye(int param) {
     // cleanup
     for (int i=0; i<3; i++) {
@@ -23,6 +26,12 @@ namespace powerhose
             sockets[i] = NULL;
         }
     }
+
+    // call the tearDown
+    if (teardown != NULL) {
+        teardown(registry);
+    }
+
     exit(1);
   }
 
@@ -37,10 +46,17 @@ namespace powerhose
     }
 
 
-  void worker(Functions functions) {
+  void worker(Functions functions, void (*setUp)(Registry), void (*tearDown)(Registry)) {
     static const char* const WORK = "ipc:///tmp/sender" ;
     static const char* const RES = "ipc:///tmp/receiver" ;
     static const char* const CTR = "ipc:///tmp/controller" ;
+
+    teardown = tearDown;
+
+    // call the setUp
+    if (setUp != NULL) {
+        setUp(registry);
+    }    
 
     context_t ctx(1);
 
@@ -93,7 +109,7 @@ namespace powerhose
             Functions::iterator iter = functions.begin();
             iter = functions.find(job_func);
 
-            string (*function)(string) = NULL;
+            string (*function)(string, Registry) = NULL;
 
             if (iter != functions.end())  {
                 cout << "Value is: " << iter->second << '\n';
@@ -111,7 +127,7 @@ namespace powerhose
 
             if (function) {
                 try {
-                    res = (*function)(job_data2);
+                    res = (*function)(job_data2, registry);
                     status = "OK";
                 }
                 catch (...) {
@@ -147,7 +163,7 @@ namespace powerhose
 
     }
 
-  int run_workers(int count, Functions functions) {
+  int run_workers(int count, Functions functions, void (*setUp)(Registry), void (*tearDown)(Registry)) {
     signal(SIGINT, bye);
     signal(SIGTERM, bye);
     cout << "Starting 10 workers." << endl;
@@ -160,7 +176,7 @@ namespace powerhose
         if (pid == 0) {
             sid = "child";
             pids[i] = pid;
-            worker(functions);
+            worker(functions, setUp, tearDown);
             i = count;
         }
         else {

@@ -12,7 +12,7 @@ using namespace std;
 using namespace powerhose;
 
 
-string square(string job) {
+string square(string job, Registry registry) {
     Job pjob;
     pjob.ParseFromString(job);
     pjob.set_value(pjob.value() * pjob.value());
@@ -31,5 +31,5 @@ int main(int argc, const char* const argv[]) {
   functions.insert(fsquare);
 
   // running the workers
-  return run_workers(num, functions);
+  return run_workers(num, functions, NULL, NULL);
 }
