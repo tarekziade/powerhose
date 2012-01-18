@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <sys/wait.h>
 #include <map>
+#include <sstream>
 
 #include <libhose.h>
 
@@ -14,9 +15,15 @@ using namespace std;
 
 namespace powerhose
 {
-  socket_t* sockets[3];
+  socket_t* sockets[4];
   void (*teardown)(Registry) = NULL;
   Registry registry;
+
+  static const char* const WORK = "ipc:///tmp/sender" ;
+  static const char* const RES = "ipc:///tmp/receiver" ;
+  static const char* const CTR = "ipc:///tmp/controller" ;
+  static const char* const MAIN = "ipc:///tmp/main" ;
+
 
   void bye(int param) {
     // cleanup
@@ -36,6 +43,11 @@ namespace powerhose
   }
 
 
+  void str2msg(string* data, message_t* msg) {
+    const char* sres = data->c_str();
+    msg->rebuild((void *)(sres), data->size(), NULL, NULL);
+  }
+
   string msg2str(message_t* msg) {
         size_t size = msg->size();
         char data[msg->size() + 1];
@@ -47,16 +59,12 @@ namespace powerhose
 
 
   void worker(Functions functions, void (*setUp)(Registry), void (*tearDown)(Registry)) {
-    static const char* const WORK = "ipc:///tmp/sender" ;
-    static const char* const RES = "ipc:///tmp/receiver" ;
-    static const char* const CTR = "ipc:///tmp/controller" ;
-
     teardown = tearDown;
 
     // call the setUp
     if (setUp != NULL) {
         setUp(registry);
-    }    
+    }
 
     context_t ctx(1);
 
@@ -163,9 +171,22 @@ namespace powerhose
 
     }
 
+  void free_str(void *data, void *hint) {
+      free(data);
+  }
+
   int run_workers(int count, Functions functions, void (*setUp)(Registry), void (*tearDown)(Registry)) {
     signal(SIGINT, bye);
     signal(SIGTERM, bye);
+
+    // setting up the main controller
+    context_t ctx(1);
+
+    // channel to receive commands
+    socket_t main_controller(ctx, ZMQ_REP);
+    main_controller.bind(MAIN);
+    sockets[3] = &main_controller;
+
     cout << "Starting 10 workers." << endl;
     int pids [10];
     string sid;
@@ -185,7 +206,38 @@ namespace powerhose
         }
     }
     if (sid == "parent") {
+        cout << "Listening to commands" << endl;
+        // get calls
+        while (true) {
+            cout << "Waiting" << endl;
+            message_t request;
+            main_controller.recv(&request);
+            string smsg = powerhose::msg2str(&request);
+
+            cout << "Received " << smsg << endl;
+            if (smsg == "NUMWORKERS") {
+                ostringstream res;
+                res << count;
+                string sres = res.str();
+                message_t reply;
+                str2msg(&sres, &reply);
+                main_controller.send(reply);
+            }
+            else if (smsg=="PING") {
+                message_t reply(4);
+                memcpy(reply.data(), "PONG", reply.size());
+                main_controller.send(reply);
+            }
+            else {
+                message_t reply(4);
+                memcpy(reply.data(), "NOOP", reply.size());
+                main_controller.send(reply);
+            }
+        }
+
+
         // here, loop to wait for all childs to die.
+
         for (int i = 0; i < count; ++i) {
             int status;
             while (-1 == waitpid(pids[i], &status, 0));

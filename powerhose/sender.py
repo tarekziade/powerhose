@@ -5,6 +5,7 @@ import zmq
 from  multiprocessing import Process
 import threading
 from collections import defaultdict
+import sys
 
 
 class TimeoutError(Exception):
@@ -14,17 +15,19 @@ class TimeoutError(Exception):
 class Receiver(threading.Thread):
     """Receive results asynchronously
     """
-    def __init__(self, context):
+    def __init__(self, context, timeout):
         threading.Thread.__init__(self)
+        self.timeout = timeout
         self.receiver = context.socket(zmq.PULL)
         self.receiver.bind(RES)
         self.running = False
         self._callbacks = defaultdict(list)
 
     def stop(self):
-        self.receiver.close()
         self.running = False
-        self.join(timeout=1.)
+        time.sleep(0.1)
+        self.receiver.close()
+        #self.join(timeout=1.)
 
     def register(self, callback, job_id):
         self._callbacks[job_id].append(callback)
@@ -33,7 +36,11 @@ class Receiver(threading.Thread):
         self.running = True
 
         while self.running:
-            res = self.receiver.recv()
+            try:
+                res = self.receiver.recv(flags=zmq.NOBLOCK)
+            except zmq.core.error.ZMQError:
+                time.sleep(.05)
+                continue
 
             # the data we get back is composed of 3 fields
             # - a job id
@@ -42,42 +49,68 @@ class Receiver(threading.Thread):
             job_id, data = res.split(':', 1)
             status, data = data.split(':', 1)
 
+            # the callbacks are called with another thread.
             for callback in self._callbacks[job_id]:
-                callback(job_id, status, data)
-
-            time.sleep(.1)
+                try:
+                    callback(job_id, status, data)
+                except Exception, e:
+                    # log this
+                    pass
 
 
 WORK = 'ipc:///tmp/sender'
 RES = 'ipc:///tmp/receiver'
 CTR = 'ipc:///tmp/controller'
+MAIN = 'ipc:///tmp/main'
 
 
 class Sender(object):
     """ Use this class to send jobs.
     """
-    def __init__(self):
+    def __init__(self, timeout=5.):
+        self.timeout = timeout
+
         # Initialize a zeromq context
         self.context = zmq.Context()
+
+        # set up the main controller
+        self.main_controller = self.context.socket(zmq.REQ)
+        self.main_controller.connect(MAIN)
+
+        # pinging the controller to check we're online
+        res = self.main_control("PING")
+        if res != "PONG":
+            raise ValueError(res)
+
+        # Set up a channel to receive results
+        self.receiver = Receiver(self.context, self.timeout)
+        self.receiver.start()
+
         # Set up a channel to send work
         self.sender = self.context.socket(zmq.PUSH)
         self.sender.bind(WORK)
-        # Set up a channel to receive results
-        self.receiver = Receiver(self.context)
-        self.receiver.start()
-
-        # Set up a channel to send control commands
-        self.controller = self.context.socket(zmq.PUB)
-        self.controller.bind(CTR)
 
     def stop(self):
-        self.control('FINISH')   # not really used yet
-        self.controller.close()
+        self.main_controller.close()
         self.sender.close()
         self.receiver.stop()
 
-    def control(self, msg):
-        self.controller.send(msg)
+    def num_workers(self):
+        return int(self.main_control("NUMWORKERS"))
+
+    def main_control(self, msg):
+        self.main_controller.send(msg)
+        start = time.time()
+        res = None
+        while time.time() - start < self.timeout:
+            try:
+                res = self.main_controller.recv(flags=zmq.NOBLOCK)
+            except zmq.core.error.ZMQError:
+                time.sleep(.2)
+
+        if res is None:
+            raise TimeoutError()
+        return res
 
     def execute(self, func_name, data, timeout=5.):
         # create a job ID
@@ -96,13 +129,11 @@ class Sender(object):
 
         # waiting for the result
         start = time.time()
-        try:
-            while time.time() - start < timeout:
-                if len(_result) > 0:
-                    break
-                time.sleep(.1)
-        except KeyboardInterrupt:
-            pass
+
+        while time.time() - start < timeout:
+            if len(_result) > 0:
+                break
+            time.sleep(.05)
 
         if len(_result) == 0:
             raise TimeoutError()
