@@ -22,7 +22,7 @@ namespace powerhose
   static const char* const WORK = "ipc:///tmp/sender" ;
   static const char* const RES = "ipc:///tmp/receiver" ;
   static const char* const CTR = "ipc:///tmp/controller" ;
-  static const char* const MAIN = "ipc:///tmp/main" ;
+  static const char* const MAIN = "tcp://*:5555" ;
 
 
   void bye(int param) {

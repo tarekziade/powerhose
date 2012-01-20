@@ -10,4 +10,8 @@ setup(name='powerhose',
       packages=find_packages(),
       include_package_data=True,
       zip_safe=False,
-      install_requires=requires)
+      install_requires=requires,
+      entry_points="""
+      [console_scripts]
+      soaker = powerhose.soaker:main
+      """)

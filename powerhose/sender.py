@@ -7,6 +7,8 @@ import threading
 from collections import defaultdict
 import sys
 
+from powerhose.soaker import Soaker
+
 
 class TimeoutError(Exception):
     pass
@@ -61,7 +63,7 @@ class Receiver(threading.Thread):
 WORK = 'ipc:///tmp/sender'
 RES = 'ipc:///tmp/receiver'
 CTR = 'ipc:///tmp/controller'
-MAIN = 'ipc:///tmp/main'
+MAIN = 'tcp://*:5555'
 
 
 class Sender(object):
@@ -74,13 +76,7 @@ class Sender(object):
         self.context = zmq.Context()
 
         # set up the main controller
-        self.main_controller = self.context.socket(zmq.REQ)
-        self.main_controller.connect(MAIN)
-
-        # pinging the controller to check we're online
-        res = self.main_control("PING")
-        if res != "PONG":
-            raise ValueError(res)
+        self.soaker = Soaker(MAIN, timeout)
 
         # Set up a channel to receive results
         self.receiver = Receiver(self.context, self.timeout)
@@ -91,26 +87,9 @@ class Sender(object):
         self.sender.bind(WORK)
 
     def stop(self):
-        self.main_controller.close()
+        self.soaker.stop()
         self.sender.close()
         self.receiver.stop()
-
-    def num_workers(self):
-        return int(self.main_control("NUMWORKERS"))
-
-    def main_control(self, msg):
-        self.main_controller.send(msg)
-        start = time.time()
-        res = None
-        while time.time() - start < self.timeout:
-            try:
-                res = self.main_controller.recv(flags=zmq.NOBLOCK)
-            except zmq.core.error.ZMQError:
-                time.sleep(.2)
-
-        if res is None:
-            raise TimeoutError()
-        return res
 
     def execute(self, func_name, data, timeout=5.):
         # create a job ID
