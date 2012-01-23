@@ -31,5 +31,5 @@ int main(int argc, const char* const argv[]) {
   functions.insert(fsquare);
 
   // running the workers
-  return run_workers(num, functions, NULL, NULL);
+  return run_workers(num, &functions, NULL, NULL);
 }

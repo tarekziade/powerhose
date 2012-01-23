@@ -23,9 +23,10 @@ namespace powerhose
    *
    */
 
+ // see how to use an active worker design when it pings it's not busy
 
-  Worker::Worker(Functions functions, void (*setUp)(Registry), void (*tearDown)(Registry)) {
-    this->functions = &functions;
+  Worker::Worker(Functions* functions, void (*setUp)(Registry), void (*tearDown)(Registry)) {
+    this->functions = functions;
     this->setUp = setUp;
     this->tearDown = tearDown;
     this->ctx = new context_t(1);
@@ -59,24 +60,15 @@ namespace powerhose
 
 
   void Worker::run() {
-
-    cout << "starting a worker" << endl;
-
     // call the setUp
     if (this->setUp != NULL) {
-        cout << "calling setup" << endl;
-
         this->setUp(registry);
     }
 
 
     // now loop and accept messages from the poller
     while (true) {
-        cout << "calling poll" << endl;
-
         poll(this->poll_items, 2, -1);
-
-        cout << "polled called" << endl;
 
         // getting the receiver jobs
         for (short j = 0; j < this->poll_items[0].revents; j++) {
@@ -93,15 +85,24 @@ namespace powerhose
             string job_data = sjob.substr(pos + 1, sjob.size() - pos);
             string job_id = sjob.substr(0, pos);
 
+            cout << "Job id " << job_id.data() << endl;
+
             pos = job_data.find(':');
             string job_data2 = job_data.substr(pos + 1, job_data.size() - pos);
             string job_func = job_data.substr(0, pos);
 
+            cout << "Job func " << job_func.data() << endl;
+
+            cout << "1" << endl;
             Functions::iterator iter = this->functions->begin();
+            cout << "2" << endl;
+
             iter = this->functions->find(job_func);
+            cout << "3" << endl;
 
             string (*function)(string, Registry) = NULL;
 
+            cout << "4" << endl;
             if (iter != this->functions->end())  {
                 cout << "Value is: " << iter->second << '\n';
                 function = iter->second;

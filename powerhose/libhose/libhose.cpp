@@ -21,20 +21,27 @@ int NUMWORKERS = 10;
 namespace powerhose
 {
 
+  Worker* worker = NULL;
+  Controller* controller = NULL;
 
   void bye_main(int param) {
     cout << "bye main" << endl;
+    if (controller != NULL) {
+        delete controller;
+    }
     exit(1);
   }
 
   void bye_worker(int param) {
     cout << "bye worker" << endl;
+    if (worker != NULL) {
+        delete worker;
+    }
     exit(1);
   }
 
 
-
-  int run_workers(int count, Functions functions, void (*setUp)(Registry), void (*tearDown)(Registry)) {
+  int run_workers(int count, Functions* functions, void (*setUp)(Registry), void (*tearDown)(Registry)) {
     // starting workers
     int pids[count];
     string sid;
@@ -51,10 +58,10 @@ namespace powerhose
             signal(SIGTERM, bye_worker);
             cout << "create a worker" << endl;
 
-            Worker worker(functions, setUp, tearDown);
+            worker = new Worker(functions, setUp, tearDown);
             cout << "running a worker" << endl;
 
-            worker.run();
+            worker->run();
             i = count;
         }
         else {
@@ -71,9 +78,9 @@ namespace powerhose
 
         // setting up the main controller
         cout << "create a controller" << endl;
-        Controller main;
+        controller = new Controller;
         cout << "running it" << endl;
-        main.run(pids, count);
+        controller->run(pids, count);
 
         // here, loop to wait for all childs to die.
         for (int i = 0; i < count; ++i) {

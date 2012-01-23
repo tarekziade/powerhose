@@ -33,7 +33,7 @@ namespace powerhose
         void (*tearDown)(Registry);
         Registry registry;
     public:
-       Worker(Functions functions, void (*setUp)(Registry), void (*tearDown)(Registry));
+       Worker(Functions* functions, void (*setUp)(Registry), void (*tearDown)(Registry));
        ~Worker();
        void run();
   };

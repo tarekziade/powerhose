@@ -10,6 +10,8 @@
 
 #include <libhose.h>
 #include "Controller.h"
+#include "util.h"
+
 
 using namespace zmq;
 using namespace std;
