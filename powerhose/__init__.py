@@ -11,5 +11,4 @@ def PowerHose():
     except KeyboardInterrupt:
         pass
     finally:
-        import pdb; pdb.set_trace()
         sender.stop()
