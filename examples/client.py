@@ -6,6 +6,7 @@ import pstats
 import time
 import sys
 
+
 def profile(sort='cumulative', lines=50, strip_dirs=False):
 
     def outer(fun):

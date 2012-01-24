@@ -31,8 +31,7 @@ class Receiver(threading.Thread):
     def stop(self):
         self.running = False
         time.sleep(.1)
-        self.receiver.close()
-        #self.join(timeout=1.)
+        self.join(timeout=.2)
 
     def register(self, callback, job_id, event=None):
         self._callbacks[job_id].append((callback, event))
@@ -94,8 +93,8 @@ class Sender(object):
 
     def stop(self):
         self.soaker.stop()
-        self.sender.close()
         self.receiver.stop()
+        time.sleep(.1)
         self.context.destroy(0)
 
     def execute(self, func_name, data, timeout=5.):
