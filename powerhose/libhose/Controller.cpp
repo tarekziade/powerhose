@@ -35,11 +35,16 @@ namespace powerhose
   void Controller::run(int pids[], int count) {
 
     while (true) {
-        cout << "Waiting" << endl;
         message_t request;
-        this->socket->recv(&request);
+        try {
+          this->socket->recv(&request);
+        }
+        catch (...) {
+            cout << "oops" << endl;
+            continue;
+        }
+
         string smsg = powerhose::msg2str(&request);
-        cout << "Received " << smsg << endl;
 
         if (smsg == "NUMWORKERS") {
             ostringstream res;

@@ -14,6 +14,7 @@ class TimeoutError(Exception):
     pass
 
 
+
 class Receiver(threading.Thread):
     """Receive results asynchronously
     """
@@ -23,26 +24,26 @@ class Receiver(threading.Thread):
         self.receiver = context.socket(zmq.PULL)
         self.receiver.bind(RES)
         self.running = False
+        self.poll = zmq.Poller()
+        self.poll.register(self.receiver, zmq.POLLIN)
         self._callbacks = defaultdict(list)
 
     def stop(self):
         self.running = False
-        time.sleep(0.1)
+        time.sleep(.1)
         self.receiver.close()
         #self.join(timeout=1.)
 
-    def register(self, callback, job_id):
-        self._callbacks[job_id].append(callback)
+    def register(self, callback, job_id, event=None):
+        self._callbacks[job_id].append((callback, event))
 
     def run(self):
         self.running = True
 
         while self.running:
-            try:
-                res = self.receiver.recv(flags=zmq.NOBLOCK)
-            except zmq.core.error.ZMQError:
-                time.sleep(.05)
-                continue
+            self.poll.poll(self.timeout)
+
+            res = self.receiver.recv()
 
             # the data we get back is composed of 3 fields
             # - a job id
@@ -52,12 +53,17 @@ class Receiver(threading.Thread):
             status, data = data.split(':', 1)
 
             # the callbacks are called with another thread.
-            for callback in self._callbacks[job_id]:
+            for callback, event in self._callbacks[job_id]:
                 try:
                     callback(job_id, status, data)
                 except Exception, e:
                     # log this
                     pass
+                if event is not None:
+                    event.set()
+
+            # we're done here
+            del self._callbacks[job_id]
 
 
 WORK = 'ipc:///tmp/sender'
@@ -90,6 +96,7 @@ class Sender(object):
         self.soaker.stop()
         self.sender.close()
         self.receiver.stop()
+        self.context.term()
 
     def execute(self, func_name, data, timeout=5.):
         # create a job ID
@@ -103,16 +110,13 @@ class Sender(object):
         def done(job_id, status, data):
             _result.append((status, data))
 
-        self.receiver.register(done, job_id)
+        # XXX can we share the event ? I don't think so..
+        lock = threading.Event()
+        self.receiver.register(done, job_id, lock)
         self.sender.send(job)
 
         # waiting for the result
-        start = time.time()
-
-        while time.time() - start < timeout:
-            if len(_result) > 0:
-                break
-            time.sleep(.05)
+        lock.wait(self.timeout)
 
         if len(_result) == 0:
             raise TimeoutError()
