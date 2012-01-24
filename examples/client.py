@@ -1,4 +1,6 @@
 from powerhose import PowerHose
+from powerhose.sender import TimeoutError
+
 from job_pb2 import Job
 import cProfile
 import tempfile
@@ -60,7 +62,12 @@ def work():
             for i in xrange(1, 10, 4):
                 job = Job()
                 job.value = i
-                status, result = ph.execute('square', job.SerializeToString())
+                try:
+                    status, result = ph.execute('square', job.SerializeToString())
+                except TimeoutError:
+                    print 'ooops. timeout. stopping'
+                    sys.exit(1)
+
                 if status != 'OK':
                     print 'The job has failed'
                     print result

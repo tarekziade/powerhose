@@ -36,6 +36,10 @@ class Receiver(threading.Thread):
     def register(self, callback, job_id, event=None):
         self._callbacks[job_id].append((callback, event))
 
+    def unregister(self, callback, job_id, event=None):
+        if (callback, event) in self._callbacks[job_id]:
+            self._callbacks[job_id].remove((callback, event))
+
     def run(self):
         self.running = True
 
@@ -115,7 +119,12 @@ class Sender(object):
         # XXX can we share the event ? I don't think so..
         lock = threading.Event()
         self.receiver.register(done, job_id, lock)
-        self.sender.send(job)
+        try:
+            self.sender.send(job, zmq.NOBLOCK)
+        except zmq.ZMQError:
+            # could not send it
+            self.receiver.unregister(done, job_id, lock)
+            raise TimeoutError()   # not always timeout
 
         # waiting for the result
         lock.wait(self.timeout)
