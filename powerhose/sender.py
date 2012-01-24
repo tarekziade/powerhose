@@ -42,7 +42,10 @@ class Receiver(threading.Thread):
         while self.running:
             self.poll.poll(self.timeout)
 
-            res = self.receiver.recv()
+            try:
+                res = self.receiver.recv()
+            except zmq.ZMQError:
+                continue   # XXX race condition when the context is terminated
 
             # the data we get back is composed of 3 fields
             # - a job id

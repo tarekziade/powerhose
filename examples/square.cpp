@@ -23,7 +23,7 @@ string square(string job, Registry registry) {
 
 
 int main(int argc, const char* const argv[]) {
-  int num = 2;
+  int num = 10;
 
   // building the map of functions
   Function fsquare = Function("square", &square);
