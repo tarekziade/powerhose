@@ -28,28 +28,24 @@ class Soaker(object):
         self.main_controller = self.context.socket(zmq.REQ)
         self.main_controller.connect(self.host)
 
-        # pinging the controller to check we're online
-        res = self.call("PING")
-        if res != "PONG":
-            raise ValueError(res)
+        # poll
+        self.poll = zmq.Poller()
+        self.poll.register(self.main_controller, zmq.POLLIN)
 
     def stop(self):
-        self.main_controller.close()
+        self.context.destroy()
 
     def num_workers(self):
         return int(self.call("NUMWORKERS"))
 
     def call(self, msg):
         self.main_controller.send(msg)
-        start = time.time()
-        res = None
-        while time.time() - start < self.timeout:
-            try:
-                res = self.main_controller.recv(flags=zmq.NOBLOCK)
-            except zmq.core.error.ZMQError:
-                time.sleep(.05)
-            else:
-                break
+
+        res = self.poll.poll(self.timeout)
+        if res == []:
+            res = None
+        else:
+            res = self.main_controller.recv()
 
         if res is None:
             raise TimeoutError()
@@ -74,4 +70,11 @@ def main(args=sys.argv):
     args = parser.parse_args()
 
     soaker = Soaker(args.host, args.timeout)
-    print soaker.call(args.action.upper())
+    try:
+        print soaker.call(args.action.upper())
+    except TimeoutError:
+        print("The call timed out or the server is not online.")
+    finally:
+        soaker.stop()
+
+    sys.exit()
