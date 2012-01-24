@@ -33,7 +33,7 @@ class Soaker(object):
         self.poll.register(self.main_controller, zmq.POLLIN)
 
     def stop(self):
-        self.context.destroy()
+        self.context.destroy(0)
 
     def num_workers(self):
         return int(self.call("NUMWORKERS"))

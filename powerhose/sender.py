@@ -96,7 +96,7 @@ class Sender(object):
         self.soaker.stop()
         self.sender.close()
         self.receiver.stop()
-        self.context.term()
+        self.context.destroy(0)
 
     def execute(self, func_name, data, timeout=5.):
         # create a job ID
