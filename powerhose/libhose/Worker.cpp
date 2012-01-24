@@ -131,7 +131,14 @@ namespace powerhose
             string sres = job_id + ":" + status + ":" + res;
             message_t mres(sres.size());
             memcpy((void *)mres.data(), sres.data(), sres.size());
-            this->sender->send(mres);
+
+            try {
+                this->sender->send(mres, ZMQ_NOBLOCK);
+            }
+            catch (...) {
+                // the sending timed out
+                //XXX
+            }
         }
 
         // getting the controller jobs

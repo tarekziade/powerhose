@@ -39,7 +39,10 @@ class Soaker(object):
         return int(self.call("NUMWORKERS"))
 
     def call(self, msg):
-        self.main_controller.send(msg)
+        try:
+            self.main_controller.send(msg, zmq.NOBLOCK)
+        except zmq.ZMQError:
+            raise TimeoutError()
 
         res = self.poll.poll(self.timeout)
         if res == []:

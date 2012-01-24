@@ -52,17 +52,32 @@ namespace powerhose
             string sres = res.str();
             message_t reply;
             str2msg(&sres, &reply);
-            this->socket->send(reply);
+            try {
+                this->socket->send(reply, ZMQ_NOBLOCK);
+            }
+            catch (...) {
+                // timeout ?
+            }
         }
         else if (smsg=="PING") {
             message_t reply(4);
             memcpy(reply.data(), "PONG", reply.size());
-            this->socket->send(reply);
+            try { 
+                this->socket->send(reply, ZMQ_NOBLOCK);
+            }
+            catch (...) {
+                // timeout ?
+            }
         }
         else {
             message_t reply(4);
             memcpy(reply.data(), "NOOP", reply.size());
-            this->socket->send(reply);
+            try {
+                this->socket->send(reply, ZMQ_NOBLOCK);
+            }
+            catch (...) {
+                // timeout ?
+            }
         }
     }
   }
