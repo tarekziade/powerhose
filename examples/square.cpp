@@ -23,7 +23,14 @@ string square(string job, Registry registry) {
 
 
 int main(int argc, const char* const argv[]) {
-  int num = 10;
+  // get the number of workers from the command line
+  int num;
+  if (argc > 1){
+      num = atoi(argv[1]);
+  } else {
+      num = 10; // default value
+  }
+  cout << "running the square exemple with " << num << " workers" << endl;
 
   // building the map of functions
   Function fsquare = Function("square", &square);
