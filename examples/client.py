@@ -70,7 +70,7 @@ def work():
                         sys.exit(1)
 
                     if status != 'OK':
-                        print 'The job has failed'
+                        print 'The job has failed: %s' % status
                         print result
                     else:
                         res = job.FromString(result)

@@ -93,19 +93,9 @@ namespace powerhose
             string job_data2 = job_data.substr(pos + 1, job_data.size() - pos);
             string job_func = job_data.substr(0, pos);
 
-
-            Functions::iterator iter = this->functions->begin();
-
-            iter = this->functions->find(job_func);
-
             string (*function)(string, Registry) = NULL;
 
-            if (iter != this->functions->end())  {
-                function = iter->second;
-            }
-            else {
-                function = NULL;
-            }
+            function = this->functions->find(job_func)->second;
 
             string res;
             string status;
@@ -122,7 +112,7 @@ namespace powerhose
                 }
             }
             else {
-                res = "The function is unknown";
+                res = "The function " + job_func + " is unknown";
                 status = "KO";
             }
 

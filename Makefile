@@ -3,8 +3,8 @@ LIBFILES = libhose.cpp Worker.cpp Controller.cpp util.cpp PowerHose.cpp
 LIBOFILES = $(LIBFILES:%.cpp=%.o)
 LIBDIR = $(CURDIR)/powerhose/libhose
 
-build:
-	cd powerhose/libhose; rm -f libhose.a; rm -f *.o
+all:
+	cd $(LIBDIR); rm -f libhose.a; rm -f *.o
 	cd $(LIBDIR); g++ -g -c $(LIBFILES) -lpthread -lzmq -Wall -I . -Wextra -pedantic
 	cd $(LIBDIR); ar cq libhose.a $(LIBOFILES)
 
