@@ -1,3 +1,6 @@
+#ifndef POWERHOSE_H
+#define POWERHOSE_H
+
 #include <string.h>
 #include <zmq.hpp>
 #include <iostream>
@@ -8,7 +11,6 @@
 #include <map>
 #include <sstream>
 
-#include <libhose.h>
 #include "Worker.h"
 #include "Controller.h"
 
@@ -45,3 +47,5 @@ namespace powerhose
   };
 
 }
+
+#endif

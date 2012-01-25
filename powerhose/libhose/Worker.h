@@ -1,3 +1,6 @@
+#ifndef WORKER_H
+#define WORKER_H
+
 #include <string.h>
 #include <zmq.hpp>
 #include <iostream>
@@ -8,7 +11,7 @@
 #include <map>
 #include <sstream>
 
-#include <libhose.h>
+#include "util.h"
 
 using namespace zmq;
 using namespace std;
@@ -39,3 +42,5 @@ namespace powerhose
   };
 
 }
+
+#endif

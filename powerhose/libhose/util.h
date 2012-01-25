@@ -15,7 +15,11 @@ using namespace std;
 
 namespace powerhose
 {
-  void free_str(void *data, void *hint);
+    typedef map<string, string> Registry;
+    typedef map<string, string(*)(string, Registry)> Functions;
+    typedef pair<string, string(*)(string, Registry)> Function;
+
+    void free_str(void *data, void *hint);
   void str2msg(string* data, message_t* msg);
   string msg2str(message_t* msg);
 }

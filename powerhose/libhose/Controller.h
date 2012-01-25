@@ -1,3 +1,7 @@
+#ifndef CONTROLLER_H
+#define CONTROLLER_H
+
+
 #include <string.h>
 #include <zmq.hpp>
 #include <iostream>
@@ -30,3 +34,5 @@ namespace powerhose
 
 
 }
+
+#endif
