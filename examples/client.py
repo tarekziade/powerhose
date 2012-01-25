@@ -56,27 +56,31 @@ def showtime(func):
 @profile
 def work():
     with PowerHose() as ph:
+        try:
+            for x in range(100000):
+                # sending some jobs
+                for i in xrange(1, 10, 4):
+                    job = Job()
+                    job.value = i
+                    try:
+                        status, result = ph.execute('square',
+                                            job.SerializeToString())
+                    except TimeoutError:
+                        print 'ooops. timeout. stopping'
+                        sys.exit(1)
 
-        for x in range(1000):
-            # sending some jobs
-            for i in xrange(1, 10, 4):
-                job = Job()
-                job.value = i
-                try:
-                    status, result = ph.execute('square', job.SerializeToString())
-                except TimeoutError:
-                    print 'ooops. timeout. stopping'
-                    sys.exit(1)
+                    if status != 'OK':
+                        print 'The job has failed'
+                        print result
+                    else:
+                        res = job.FromString(result)
+                        print '%d * %d = %d' % (i, i, res.value)
+        except KeyboardInterrupt:
+            pass
 
-                if status != 'OK':
-                    print 'The job has failed'
-                    print result
-                else:
-                    res = job.FromString(result)
-                    print '%d * %d = %d' % (i, i, res.value)
-
+        return x
 
 if __name__ == "__main__":
 
-    work()
+    print 'Did %d loops' % work()
     sys.exit()

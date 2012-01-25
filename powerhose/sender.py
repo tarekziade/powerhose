@@ -97,6 +97,7 @@ class Sender(object):
         # Set up a channel to send work
         self.sender = self.context.socket(zmq.PUSH)
         self.sender.bind(WORK)
+        time.sleep(.2)
 
     def stop(self):
         self.soaker.stop()
@@ -121,7 +122,8 @@ class Sender(object):
         self.receiver.register(done, job_id, lock)
         try:
             self.sender.send(job, zmq.NOBLOCK)
-        except zmq.ZMQError:
+        except zmq.ZMQError, e:
+            print(str(e))
             # could not send it
             self.receiver.unregister(done, job_id, lock)
             raise TimeoutError()   # not always timeout
