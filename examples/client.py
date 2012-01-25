@@ -55,7 +55,7 @@ def showtime(func):
 @showtime
 @profile
 def work():
-    with PowerHose() as ph:
+    with PowerHose(identifier="square-example") as ph:
         try:
             for x in range(100000):
                 # sending some jobs

@@ -41,7 +41,12 @@ namespace powerhose
      Registry registry;
      void waitchildren();
      void killchildren();
-     PowerHose(int numworkers, Functions* functions, void (*setUp)(Registry), void (*tearDown)(Registry));
+
+     PowerHose(const char* identifier, int numworkers, Functions* functions,
+          void (*setUp)(Registry),
+          void (*tearDown)(Registry),
+          const char* prefix);
+
      ~PowerHose();
      void run();
   };

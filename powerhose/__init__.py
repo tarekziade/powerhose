@@ -3,8 +3,8 @@ from contextlib import contextmanager
 
 
 @contextmanager
-def PowerHose():
-    sender = Sender()
+def PowerHose(identifier, prefix=None):
+    sender = Sender(identifier, prefix)
 
     try:
         yield sender

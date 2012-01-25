@@ -17,12 +17,11 @@ using namespace std;
 
 namespace powerhose
 {
+  int run_workers(const char* identifier, int count, Functions* functions,
+		  void (*setUp)(Registry), void (*tearDown)(Registry), const char* channelPrefix) {
 
-  int run_workers(int count, Functions* functions, void (*setUp)(Registry), void (*tearDown)(Registry)) {
-    PowerHose powerhose(10, functions, setUp, tearDown);
-
+    PowerHose powerhose(identifier, count, functions, setUp, tearDown, channelPrefix);
     powerhose.run();
-
     return 0;
     }
 }

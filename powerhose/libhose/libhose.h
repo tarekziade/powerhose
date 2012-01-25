@@ -14,6 +14,7 @@ using namespace zmq;
 using namespace std;
 
 namespace powerhose {
-    extern int run_workers(int count, Functions* functions, void (*setUp)(Registry), void (*tearDown)(Registry));
+    static const char* const DEFAULT_PREFIX = "ipc:///tmp/";
+    extern int run_workers(const char* identifier, int count, Functions* functions, void (*setUp)(Registry)=NULL, void (*tearDown)(Registry)=NULL, const char* channelPrefix=DEFAULT_PREFIX);
 }
 

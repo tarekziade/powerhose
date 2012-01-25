@@ -25,18 +25,20 @@ namespace powerhose
 
  // see how to use an active worker design when it pings it's not busy
 
-  Worker::Worker(Functions* functions, void (*setUp)(Registry), void (*tearDown)(Registry)) {
+  Worker::Worker(Functions* functions, void (*setUp)(Registry),
+		  void (*tearDown)(Registry), const char* senderChannel, 
+		  const char* receiverChannel, const char* controllerChannel) {
 
     this->functions = functions;
     this->setUp = setUp;
     this->tearDown = tearDown;
     this->ctx = new context_t(1);
     this->receiver = new socket_t(*this->ctx, ZMQ_PULL);
-    this->receiver->connect(WORK);
+    this->receiver->connect(senderChannel);
     this->sender = new socket_t(*this->ctx, ZMQ_PUSH);
-    this->sender->connect(RES);
+    this->sender->connect(receiverChannel);
     this->control = new socket_t(*this->ctx, ZMQ_SUB);
-    this->control->connect(CTR);
+    this->control->connect(controllerChannel);
 
     zmq_pollitem_t item1;
     item1.socket = *this->receiver;

@@ -36,8 +36,12 @@ namespace powerhose
     exit(1);
   }
 
+  PowerHose::PowerHose(const char* identifier, int numworkers,
+		  Functions* functions,
+          void (*setUp)(Registry),
+          void (*tearDown)(Registry),
+          const char* channelPrefix) {
 
-  PowerHose::PowerHose(int numworkers, Functions* functions, void (*setUp)(Registry), void (*tearDown)(Registry)) {
     if (singleton != NULL) {
         throw singletonex;
     }
@@ -54,6 +58,13 @@ namespace powerhose
     short i = 1;
     int pgid = getpgid(getpid());
 
+    // get the channels location from the identifier
+    string senderChannel, receiverChannel, controllerChannel;
+
+    senderChannel = (string) channelPrefix + (string) identifier + "-sender";
+    receiverChannel = (string) channelPrefix + (string) identifier + "-receiver";
+    controllerChannel = (string) channelPrefix + (string) identifier + "-controller";
+
     while (i < this->numworkers) {
         pid_t pid = fork();
         if (pid == 0) {
@@ -63,7 +74,10 @@ namespace powerhose
             signal(SIGINT, bye_worker);
             signal(SIGTERM, bye_worker);
 
-            worker = new Worker(functions, setUp, tearDown);
+            worker = new Worker(functions, setUp, tearDown,
+                    senderChannel.c_str(), receiverChannel.c_str(),
+                    controllerChannel.c_str());
+
             worker->run();
             i = this->numworkers;
         }

@@ -2,10 +2,8 @@ import time
 import os
 import binascii
 import zmq
-from  multiprocessing import Process
 import threading
 from collections import defaultdict
-import sys
 
 from powerhose.soaker import Soaker
 
@@ -14,15 +12,14 @@ class TimeoutError(Exception):
     pass
 
 
-
 class Receiver(threading.Thread):
     """Receive results asynchronously
     """
-    def __init__(self, context, timeout):
+    def __init__(self, context, timeout, stream):
         threading.Thread.__init__(self)
         self.timeout = timeout
         self.receiver = context.socket(zmq.PULL)
-        self.receiver.bind(RES)
+        self.receiver.bind(stream)
         self.running = False
         self.poll = zmq.Poller()
         self.poll.register(self.receiver, zmq.POLLIN)
@@ -72,16 +69,20 @@ class Receiver(threading.Thread):
             del self._callbacks[job_id]
 
 
-WORK = 'ipc:///tmp/sender'
-RES = 'ipc:///tmp/receiver'
-CTR = 'ipc:///tmp/controller'
+DEFAULT_PREFIX = 'ipc:///tmp/'
 MAIN = 'tcp://*:5555'
+
+
+def get_stream(prefix, identifier, name):
+    return "%s%s-%s" % (prefix, identifier, name)
 
 
 class Sender(object):
     """ Use this class to send jobs.
     """
-    def __init__(self, timeout=5.):
+    def __init__(self, identifier, prefix=None, timeout=5.):
+        self.identifier = identifier
+        self.prefix = prefix or DEFAULT_PREFIX
         self.timeout = timeout
 
         # Initialize a zeromq context
@@ -91,12 +92,13 @@ class Sender(object):
         self.soaker = Soaker(MAIN, timeout)
 
         # Set up a channel to receive results
-        self.receiver = Receiver(self.context, self.timeout)
+        self.receiver = Receiver(self.context, self.timeout,
+                stream=get_stream(self.prefix, self.identifier, 'receiver'))
         self.receiver.start()
 
         # Set up a channel to send work
         self.sender = self.context.socket(zmq.PUSH)
-        self.sender.bind(WORK)
+        self.sender.bind(get_stream(self.prefix, self.identifier, 'sender'))
         time.sleep(.2)
 
     def stop(self):

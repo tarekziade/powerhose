@@ -19,10 +19,6 @@ using namespace std;
 
 namespace powerhose
 {
-  static const char* const WORK = "ipc:///tmp/sender" ;
-  static const char* const RES = "ipc:///tmp/receiver" ;
-  static const char* const CTR = "ipc:///tmp/controller" ;
-
   class Worker {
 
     private:
@@ -36,7 +32,9 @@ namespace powerhose
         void (*tearDown)(Registry);
         Registry registry;
     public:
-       Worker(Functions* functions, void (*setUp)(Registry), void (*tearDown)(Registry));
+       Worker(Functions* functions, void (*setUp)(Registry),
+			  void (*tearDown)(Registry), const char* senderChannel,
+			  const char* receiverChannel, const char* controllerChannel);
        ~Worker();
        void run();
   };
