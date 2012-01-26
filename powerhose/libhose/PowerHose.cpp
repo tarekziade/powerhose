@@ -117,7 +117,7 @@ namespace powerhose
     // here, loop to wait for all childs to die.
     for (int i = 0; i < this->numworkers; ++i) {
        int status;
-       while (-1 == waitpid(this->pids[i], &status, 0));
+       while (-1 == waitpid(this->pids[i], &status, 0)) ;
        if (!WIFEXITED(status) || WEXITSTATUS(status) != 0) {
            cerr << "Process " << i << " (pid " << this->pids[i] << ") failed" << endl;
            //exit(1);

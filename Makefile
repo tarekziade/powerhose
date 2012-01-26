@@ -1,16 +1,21 @@
-
 LIBFILES = libhose.cpp Worker.cpp Controller.cpp util.cpp PowerHose.cpp 
 LIBOFILES = $(LIBFILES:%.cpp=%.o)
-LIBDIR = $(CURDIR)/powerhose/libhose
+DIR = $(CURDIR)/powerhose/libhose
+INCLUDEDIR = -I$(DIR) -I/opt/local/include
+LIBDIR = -L$(DIR) -L/opt/local/lib
+OPTS = -lpthread -lzmq -g -Wall -Wextra -pedantic -lprotobuf
 
 all:
-	cd $(LIBDIR); rm -f libhose.a; rm -f *.o
-	cd $(LIBDIR); g++ -g -c $(LIBFILES) -lpthread -lzmq -Wall -I . -Wextra -pedantic
-	cd $(LIBDIR); ar cq libhose.a $(LIBOFILES)
+	build
+
+build:
+	cd $(DIR); rm -f libhose.a; rm -f *.o
+	cd $(DIR); g++ $(INCLUDEDIR) $(LIBDIR) -c $(LIBFILES) $(OPTS)
+	cd $(DIR); ar cq libhose.a $(LIBOFILES)
 
 build-example:
 	cd examples; rm -f square
-	cd examples; g++ -g -Wall -o square job.pb.cc square.cpp -lhose -lprotobuf -lzmq -Wextra -pedantic -I $(LIBDIR) -L $(LIBDIR)
+	cd examples; g++ -o square job.pb.cc square.cpp -lhose $(OPTS) $(INCLUDEDIR) $(LIBDIR)
 
 proto:
 	protoc examples/job.proto --python_out=examples -I=examples/

@@ -28,8 +28,9 @@ namespace powerhose
   }
 
   string msg2str(message_t* msg) {
+
         size_t size = msg->size();
-        char data[msg->size() + 1];
+        char* data = new char[msg->size() + 1];
         memcpy(data, msg->data(), size);
         data[size] = 0;
         string res = data;
