@@ -70,7 +70,7 @@ class Receiver(threading.Thread):
 
 
 DEFAULT_PREFIX = 'ipc:///tmp/'
-MAIN = 'tcp://*:5555'
+MAIN = 'tcp://127.0.0.1:5555'
 
 
 def get_stream(prefix, identifier, name):
