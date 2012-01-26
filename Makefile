@@ -3,7 +3,10 @@ LIBOFILES = $(LIBFILES:%.cpp=%.o)
 DIR = $(CURDIR)/powerhose/libhose
 INCLUDEDIR = -I$(DIR) -I/opt/local/include
 LIBDIR = -L$(DIR) -L/opt/local/lib
-OPTS = -lpthread -lzmq -g -Wall -Wextra -pedantic -lprotobuf
+OPTS = -lpthread -lzmq -g -Wall -Wextra -lprotobuf
+
+.phony: all build build-example proto
+
 
 all:
 	build
@@ -13,7 +16,7 @@ build:
 	cd $(DIR); g++ $(INCLUDEDIR) $(LIBDIR) -c $(LIBFILES) $(OPTS)
 	cd $(DIR); ar cq libhose.a $(LIBOFILES)
 
-build-example:
+build-example: proto
 	cd examples; rm -f square
 	cd examples; g++ -o square job.pb.cc square.cpp -lhose $(OPTS) $(INCLUDEDIR) $(LIBDIR)
 
